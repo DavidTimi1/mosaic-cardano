@@ -1,6 +1,7 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
+import { Loader2Icon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -9,15 +10,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-[#4338CA] text-white shadow-xl hover:scale-105 active:scale-95 disabled:opacity-20",
+        default: "bg-[#4338CA] text-white shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50",
         accent: "bg-amber-500 text-black shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50",
         secondary: "bg-black/5 hover:bg-black/10 text-[#111827]",
         outline: "border border-black/5 bg-white hover:border-black/20 text-[#111827]",
         cardActive: "bg-[#4338CA] text-white border border-[#4338CA] shadow-xl scale-105",
         ghost: "hover:bg-black/5 text-[#4338CA]",
         link: "text-[#4338CA] underline-offset-4 hover:underline",
-        linkAccent: "text-amber-600 hover:text-amber-700",
-        auth: "bg-[#4338CA] text-white shadow-xl hover:shadow-2xl"
+        linkAccent: "text-amber-600 hover:text-amber-700"
       },
       size: {
         default: "px-10 py-3 rounded-2xl text-lg",
@@ -41,10 +41,13 @@ function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  isLoading = false,
+  children,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    isLoading?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"
 
@@ -54,8 +57,18 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={isLoading || props.disabled}
       {...props}
-    />
+    >
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {isLoading && <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />}
+          {children}
+        </>
+      )}
+    </Comp>
   )
 }
 
