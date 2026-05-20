@@ -1,4 +1,4 @@
-import ExploreView from '../../components/ExploreView';
+import ExploreView from '../../../components/ExploreView';
 
 export default function ExplorePage() {
   return <ExploreView />;
