@@ -18,12 +18,13 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { useGetVillageDetails } from '@/services/villages';
+import AppSidebar from '../layout/AppSidebar';
 
 export default function VillageSidebar() {
   const pathname = usePathname();
   const params = useParams();
   const communityId = params.community_id as string;
-  const { data: village } = useGetVillageDetails(communityId);
+  const { data: village, isLoaded } = useGetVillageDetails(communityId);
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -53,6 +54,10 @@ export default function VillageSidebar() {
     { name: 'Governance', path: `/v/${communityId}/governance`, icon: Scale },
     { name: 'Members', path: `/v/${communityId}/members`, icon: Users },
   ];
+
+  if (isLoaded && !village?.isMember) {
+    return <AppSidebar />
+  }
 
   return (
     <aside
