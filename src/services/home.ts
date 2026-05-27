@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useXQuery } from "@/lib/extended-react-query";
 
 // ============================================================================
 // DUMMY DATA
@@ -138,7 +138,7 @@ export const fetchSavedItems = async () => {
 // ============================================================================
 
 export const useGetActionItems = () => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['homeActionItems'],
     queryFn: async () => {
       await delay(600);
@@ -148,7 +148,7 @@ export const useGetActionItems = () => {
 };
 
 export const useGetActiveProjects = () => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['homeActiveProjects'],
     queryFn: async () => {
       await delay(800);
@@ -158,7 +158,7 @@ export const useGetActiveProjects = () => {
 };
 
 export const useGetCommunityUpdates = () => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['homeCommunityUpdates'],
     queryFn: async () => {
       await delay(1000);
@@ -168,7 +168,7 @@ export const useGetCommunityUpdates = () => {
 };
 
 export const useGetSavedItems = () => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['homeSavedItems'],
     queryFn: async () => {
       await delay(500);

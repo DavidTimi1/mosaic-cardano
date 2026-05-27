@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useXQuery } from "@/lib/extended-react-query";
 
 // --- Dummy Data ---
 const MOCK_PROJECTS = [
@@ -64,7 +64,7 @@ const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 // --- Hooks ---
 export const useGetVillageDetails = (id: string) => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['villageDetails', id],
     queryFn: async () => {
       await delay(400);
@@ -74,7 +74,7 @@ export const useGetVillageDetails = (id: string) => {
 };
 
 export const useGetVillageProjects = () => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['villageProjects'],
     queryFn: async () => {
       await delay(800);
@@ -84,7 +84,7 @@ export const useGetVillageProjects = () => {
 };
 
 export const useGetVillageStream = () => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['villageStream'],
     queryFn: async () => {
       await delay(1000);
@@ -94,7 +94,7 @@ export const useGetVillageStream = () => {
 };
 
 export const useGetVillageNeeds = () => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['villageNeeds'],
     queryFn: async () => {
       await delay(600);
@@ -104,7 +104,7 @@ export const useGetVillageNeeds = () => {
 };
 
 export const useGetVillageTimeline = () => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['villageTimeline'],
     queryFn: async () => {
       await delay(500);
@@ -120,7 +120,7 @@ const MOCK_FEATURED_VILLAGES = [
 ];
 
 export const useGetFeaturedVillages = () => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['featuredVillages'],
     queryFn: async () => {
       await delay(600);
@@ -137,7 +137,7 @@ const MOCK_FEATURED_ARTIFACTS = [
 ];
 
 export const useGetFeaturedArtifacts = () => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['featuredArtifacts'],
     queryFn: async () => {
       await delay(700);
@@ -145,3 +145,65 @@ export const useGetFeaturedArtifacts = () => {
     }
   });
 };
+
+const MOCK_VILLAGE_FEATURED_WORKS = [
+  {
+    id: 1,
+    title: "The Griot's Echo: A Griot's Tale",
+    desc: "A collection of epic poems transcribed from the oral tradition of the Griot storytellers.",
+    tags: ['Poetry', 'Oral History', 'West Africa'],
+    contributors: 5,
+  },
+  {
+    id: 2,
+    title: "Voices of the Diaspora",
+    desc: "Personal essays and interviews from community members living abroad, connecting roots with the present.",
+    tags: ['Essays', 'Interviews', 'Diaspora'],
+    contributors: 8,
+  },
+];
+
+const MOCK_TREASURY_ALLOCATIONS = {
+  balance: '45,000 SCR',
+  recentAllocations: [
+    { label: 'Mali Site Prep', amount: '-450' },
+    { label: 'Steward Stipends', amount: '-1,200' },
+  ],
+};
+
+const MOCK_VILLAGE_MEMBERS = Array.from({ length: 13 }, (_, i) => ({
+  id: String(i + 1),
+  name: `Member ${i + 1}`,
+  avatar: '',
+}));
+
+export const useGetVillageFeaturedWorks = (villageId: string) => {
+  return useXQuery({
+    queryKey: ['villageFeaturedWorks', villageId],
+    queryFn: async () => {
+      await delay(500);
+      return MOCK_VILLAGE_FEATURED_WORKS;
+    }
+  });
+};
+
+export const useGetVillageTreasuryAllocations = (villageId: string) => {
+  return useXQuery({
+    queryKey: ['villageTreasuryAllocations', villageId],
+    queryFn: async () => {
+      await delay(400);
+      return MOCK_TREASURY_ALLOCATIONS;
+    }
+  });
+};
+
+export const useGetVillageMembers = (villageId: string) => {
+  return useXQuery({
+    queryKey: ['villageMembers', villageId],
+    queryFn: async () => {
+      await delay(300);
+      return MOCK_VILLAGE_MEMBERS;
+    }
+  });
+};
+

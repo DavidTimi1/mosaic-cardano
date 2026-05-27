@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useXQuery } from "@/lib/extended-react-query";
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -8,6 +8,7 @@ const MOCK_USER_PROFILE = {
   handle: '@davidartisan',
   bio: 'Digital archivist and open-source weaver. Dedicated to preserving collective memory through immutable infrastructure.',
   joinedDate: 'December 2022',
+  isVerified: true,
   walletAddress: 'addr1q9...', // Simplified
 };
 
@@ -27,6 +28,7 @@ const MOCK_PUBLISHED_WORKS = [
 export interface UserProfile {
   id: string;
   displayName: string;
+  isVerified: boolean;
   handle: string;
   bio: string;
   joinedDate: string;
@@ -98,7 +100,7 @@ const MOCK_REPUTATION = {
 };
 
 export const useGetUserProfile = (userId: string) => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['userProfile', userId],
     queryFn: async () => {
       await delay(500);
@@ -108,7 +110,7 @@ export const useGetUserProfile = (userId: string) => {
 };
 
 export const useGetUserPublishedWorks = (userId: string) => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['userWorks', userId],
     queryFn: async () => {
       await delay(600);
@@ -118,7 +120,7 @@ export const useGetUserPublishedWorks = (userId: string) => {
 };
 
 export const useGetUserContributions = (userId: string) => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['userContributions', userId],
     queryFn: async () => {
       await delay(700);
@@ -128,7 +130,7 @@ export const useGetUserContributions = (userId: string) => {
 };
 
 export const useGetUserReputation = (userId: string) => {
-  return useQuery({
+  return useXQuery({
     queryKey: ['userReputation', userId],
     queryFn: async () => {
       await delay(650);
