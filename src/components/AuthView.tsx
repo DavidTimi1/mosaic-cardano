@@ -29,19 +29,33 @@ export default function AuthView() {
 
     try {
       const formData = new FormData(e.currentTarget);
-      const email = formData.get('email') as string;
+      const email = String(formData.get('email') || '');
+      const password = String(formData.get('password') || '');
+      const endpoint = mode === 'signup' ? '/api/auth/register' : '/api/auth/login';
 
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (email === 'error@mosaic.so') {
-            reject(new Error("Invalid credentials. Please try again."));
-          } else {
-            resolve(true);
+      const payload = mode === 'signup'
+        ? {
+            username: email.split('@')[0]?.replace(/[^a-zA-Z0-9_]/g, '_') || 'mosaic_user',
+            displayName: String(formData.get('name') || 'Mosaic User'),
+            email,
+            password,
           }
-        }, 1500);
+        : { email, password };
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
       });
 
-      router.push('/onboarding');
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || 'Something went wrong. Please try again.');
+      }
+
+      router.refresh();
+      router.push(mode === 'signup' ? '/onboarding' : '/home');
     } catch (err) {
       setError((err as Error).message || 'Something went wrong. Please try again.');
     } finally {
