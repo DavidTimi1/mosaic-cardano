@@ -88,8 +88,6 @@ export const authService = {
 			memoryCost: 2 ** 16,
 			parallelism: 1,
 		});
-
-        console.log("\n\n\n\n\nRegistering\n\n\n\n\n")
 		
 const rows = await runWrite(
 `
@@ -124,12 +122,9 @@ const rows = await runWrite(
 row => mapUserNode(row.user),
 );
 
-        console.log("\n\n\n\n\nRegistered\n\n\n\n\n")
-
 		if (!rows[0]) {
 			throw new Error('Email is already registered');
 		}
-        console.log("\n\n\n\n\nnRegistered\n\n\n\n\n")
 		return rows[0];
 	},
 

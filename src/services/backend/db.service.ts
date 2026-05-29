@@ -1,6 +1,5 @@
-import { runWrite } from "./shared"
-
-
+import { runWrite } from "./shared";
+import crypto from 'crypto';
 
 export const dbService = {
 
@@ -18,5 +17,56 @@ export const dbService = {
             CREATE INDEX user_username_idx IF NOT EXISTS FOR (u:User) ON (u.username);
             CREATE INDEX artifact_type_idx IF NOT EXISTS FOR (a:Artifact) ON (a.type);
         `, {}, () => null);
+    },
+
+    // Seed a small set of public villages (communities) for local/dev environments.
+    // This operation is idempotent: we MERGE by `slug` and only set `id` on create.
+    async seedVillages() {
+        const now = Date.now();
+        const base = [
+            { slug: 'arts-and-stories', name: 'Arts & Stories', description: 'A village for storytellers and visual artists.' },
+            { slug: 'open-source-collab', name: 'Open Source Collab', description: 'Builders collaborating on open infrastructure.' },
+            { slug: 'sound-experiments', name: 'Sound Experiments', description: 'Experimental audio and field recordings.' },
+            { slug: 'urban-gardens', name: 'Urban Gardens', description: 'Community gardens and local ecology projects.' },
+            { slug: 'film-makers-hub', name: 'Filmmakers Hub', description: 'Independent film and short-form creators.' },
+            { slug: 'crafts-and-making', name: 'Crafts & Making', description: 'Hands-on making, craft, and material practice.' },
+            { slug: 'poetry-circles', name: 'Poetry Circles', description: 'Poets, spoken word and small-press collaborators.' },
+            { slug: 'research-practices', name: 'Research Practices', description: 'Practice-led research and methods exchange.' },
+            { slug: 'audio-visual-labs', name: 'Audio Visual Labs', description: 'Collaborations across sound and moving image.' },
+            { slug: 'digital-traditions', name: 'Digital Traditions', description: 'Exploring cultural practices through code.' },
+
+            // 10 more villages
+            { slug: 'makers-collective', name: 'Makers Collective', description: 'Tooling, workshops and prototyping community.' },
+            { slug: 'local-history', name: 'Local History', description: 'Documenting and archiving local stories.' },
+            { slug: 'food-innovators', name: 'Food Innovators', description: 'Experimental kitchens and food systems.' },
+            { slug: 'eco-tech', name: 'Eco Tech', description: 'Sustainable technology and environmental action.' },
+            { slug: 'design-systems', name: 'Design Systems', description: 'Designers and pattern libraries.' },
+            { slug: 'education-labs', name: 'Education Labs', description: 'Alternative pedagogies and learning projects.' },
+            { slug: 'photography-club', name: 'Photography Club', description: 'Image-making and critique groups.' },
+            { slug: 'textile-studio', name: 'Textile Studio', description: 'Weaving, textiles and material experiments.' },
+            { slug: 'data-visualisation', name: 'Data Visualisation', description: 'Storytelling with data and visualization.' },
+            { slug: 'performance-art', name: 'Performance Art', description: 'Live practice, performance and durational work.' },
+        ];
+
+        const villages = base.map(v => ({ id: crypto.randomUUID(), slug: v.slug, name: v.name, description: v.description, createdAt: now }));
+
+        await runWrite(
+            `
+                UNWIND $villages AS v
+                MERGE (c:Community {slug: v.slug})
+                ON CREATE SET c.id = v.id, c.name = v.name, c.description = v.description, c.createdAt = v.createdAt
+                RETURN count(c) AS created
+            `,
+            { villages },
+            row => row.created,
+        );
+    },
+
+    // Initialize DB: enforce constraints and optionally seed sample villages.
+    async init({ seed = true } = {}) {
+        await this.enforceConstraints();
+        if (seed) {
+            await this.seedVillages();
+        }
     }
 }
