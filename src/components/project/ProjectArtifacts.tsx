@@ -2,6 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { ProjectDetail } from '@/services/projects';
 import { FileText, ChevronRight } from 'lucide-react';
+import { ROUTES } from '@/lib/routes';
+import { TexturedCard } from '@/components/ui/textured-card';
 
 export default function ProjectArtifacts({ project, projectId }: { project: ProjectDetail, projectId: string }) {
   return (
@@ -14,9 +16,9 @@ export default function ProjectArtifacts({ project, projectId }: { project: Proj
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {project.artifacts.map(artifact => (
-          <div key={artifact.id} className="bg-theme-parchment p-6 rounded-xl border border-theme-outline/20 hover:border-theme-clay/50 transition-colors flex flex-col justify-between group h-48 shadow-sm">
-            <div>
+        {project.artifacts.map((artifact, i) => (
+          <TexturedCard patternId={(i % 5) + 1 as 1|2|3|4|5} key={artifact.id} className="bg-theme-parchment p-6 rounded-xl border border-theme-outline/20 hover:border-theme-clay/50 transition-colors flex flex-col justify-between group h-48 shadow-sm">
+            <div className="relative z-10">
               <div className="flex justify-between items-start mb-3">
                 <span className={`px-2 py-0.5 rounded text-[9px] uppercase tracking-widest font-bold ${
                   artifact.status === 'Published' ? 'bg-theme-forest text-white' : 
@@ -31,7 +33,7 @@ export default function ProjectArtifacts({ project, projectId }: { project: Proj
               <h3 className="font-serif text-xl text-theme-forest mb-2 line-clamp-2">{artifact.title}</h3>
             </div>
             
-            <div className="flex justify-between items-center mt-auto">
+            <div className="flex justify-between items-center mt-auto relative z-10">
               <div className="flex -space-x-2">
                 {artifact.authorIds.map(id => {
                   const author = project.contributors.find(c => c.id === id);
@@ -42,11 +44,14 @@ export default function ProjectArtifacts({ project, projectId }: { project: Proj
                   );
                 })}
               </div>
-              <Link href={`/studio?project_id=${projectId}&artifact_id=${artifact.id}`} className="text-theme-accent font-bold text-[10px] uppercase tracking-widest flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Link 
+                href={artifact.status === 'Published' ? ROUTES.ARTIFACT(artifact.id) : `/studio?project_id=${projectId}&artifact_id=${artifact.id}`} 
+                className="text-theme-accent font-bold text-[10px] uppercase tracking-widest flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
                 {artifact.status === 'Published' ? 'View Details' : 'Open in Studio'} <ChevronRight size={14} />
               </Link>
             </div>
-          </div>
+          </TexturedCard>
         ))}
       </div>
     </div>

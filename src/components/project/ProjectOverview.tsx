@@ -1,5 +1,6 @@
 import React from 'react';
 import { ProjectDetail } from '@/services/projects';
+import { TexturedCard } from '@/components/ui/textured-card';
 
 export default function ProjectOverview({ project, setActiveTab }: { project: ProjectDetail, setActiveTab: (tab: string) => void }) {
   return (
@@ -32,13 +33,13 @@ export default function ProjectOverview({ project, setActiveTab }: { project: Pr
       </div>
       
       <div className="space-y-8">
-        <div className="bg-theme-surface-high p-6 rounded-xl border border-theme-outline/20">
+        <TexturedCard patternId={3} className="bg-theme-surface-high p-6 rounded-xl border border-theme-outline/20">
           <h3 className="font-sans text-xs uppercase tracking-widest font-bold text-theme-accent mb-4">Current Focus</h3>
-          <div className="bg-theme-parchment p-4 rounded border border-theme-clay/30">
+          <div className="bg-theme-parchment p-4 rounded border border-theme-clay/30 relative z-10">
             <p className="text-sm font-medium text-theme-forest mb-2">Phase 2: Transcription & Translation</p>
             <p className="text-xs text-theme-on-surface/70">1 task remaining to complete this phase.</p>
           </div>
-        </div>
+        </TexturedCard>
         
         <div>
           <h3 className="font-sans text-xs uppercase tracking-widest font-bold text-theme-accent mb-4">Top Stewards</h3>

@@ -87,6 +87,18 @@ export interface DocumentRevision {
   description: string;
 }
 
+export interface ArtifactAnalytics {
+  readershipQualityScore: number; // 0-100
+  citations: number;
+  saves: number;
+  communityReuse: number;
+  supporterConversionRate: number; // percentage
+  contributionSpread: {
+    label: string;
+    percentage: number;
+  }[];
+}
+
 // ============================================================================
 // DUMMY DATASET
 // ============================================================================
@@ -171,6 +183,21 @@ const MOCK_REVISIONS: Record<string, DocumentRevision[]> = {
   ]
 };
 
+const MOCK_ANALYTICS: Record<string, ArtifactAnalytics> = {
+  'a2': {
+    readershipQualityScore: 88,
+    citations: 12,
+    saves: 45,
+    communityReuse: 3,
+    supporterConversionRate: 4.2,
+    contributionSpread: [
+      { label: 'Scribes of Sahel', percentage: 70 },
+      { label: 'Gao Historians', percentage: 20 },
+      { label: 'Independent', percentage: 10 }
+    ]
+  }
+};
+
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 // ============================================================================
@@ -205,6 +232,49 @@ export const useGetDocumentRevisions = (artifactId: string) => {
     queryFn: async () => {
       await delay(300);
       return MOCK_REVISIONS[artifactId] || [];
+    },
+    enabled: !!artifactId
+  });
+};
+
+export const useGetArtifactAnalytics = (artifactId: string) => {
+  return useXQuery({
+    queryKey: ['artifactAnalytics', artifactId],
+    queryFn: async () => {
+      await delay(400);
+      // Return default analytics if not found
+      return MOCK_ANALYTICS[artifactId] || {
+        readershipQualityScore: 0,
+        citations: 0,
+        saves: 0,
+        communityReuse: 0,
+        supporterConversionRate: 0,
+        contributionSpread: []
+      };
+    },
+    enabled: !!artifactId
+  });
+};
+
+export const useGetArtifactDetails = (artifactId: string) => {
+  return useXQuery({
+    queryKey: ['artifactDetails', artifactId],
+    queryFn: async () => {
+      await delay(500);
+      for (const projectId in MOCK_PROJECT_DETAILS) {
+        const project = MOCK_PROJECT_DETAILS[projectId];
+        const artifact = project.artifacts.find(a => a.id === artifactId);
+        if (artifact) {
+          return {
+            ...artifact,
+            projectTitle: project.title,
+            projectId: project.id,
+            communityId: project.communityId,
+            authors: artifact.authorIds.map(id => project.contributors.find(c => c.id === id)).filter(Boolean) as ProjectContributor[]
+          };
+        }
+      }
+      return null;
     },
     enabled: !!artifactId
   });

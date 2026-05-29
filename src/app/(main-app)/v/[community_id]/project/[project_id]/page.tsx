@@ -20,6 +20,7 @@ import ProjectDeadlines from '@/components/project/ProjectDeadlines';
 import { ROUTES } from '@/lib/routes';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { TexturedCard } from '@/components/ui/textured-card';
 
 type Tab = 'overview' | 'contributors' | 'tasks' | 'artifacts' | 'discussions' | 'references' | 'deadlines';
 
@@ -66,10 +67,10 @@ export default function ProjectWorkspacePage() {
       {/* Header / Hero */}
       <header className="px-6 md:px-12 lg:px-24 py-12 bg-theme-surface-low border-b border-theme-outline/20">
         <div className="max-w-6xl mx-auto">
-          <Button asChild variant="link" size="sm">
+          <Button asChild variant="link" size="sm" className="pl-0 text-theme-on-surface/60 hover:text-theme-forest font-sans uppercase tracking-widest text-[10px] font-bold mb-4">
             <Link href={ROUTES.VILLAGE.PROJECTS(communityId)}>
-              <ChevronLeftIcon />
-              Back
+              <ChevronLeftIcon size={14} className="mr-1" />
+              Back to Projects
             </Link>
           </Button>
           
@@ -95,18 +96,18 @@ export default function ProjectWorkspacePage() {
               </div>
             </div>
             
-            <div className="w-full md:w-64 bg-theme-parchment p-5 rounded-xl border border-theme-outline/20 shadow-sm">
+            <TexturedCard patternId={2} className="w-full md:w-64 bg-theme-parchment p-5 rounded-xl border border-theme-outline/20 shadow-sm">
               <div className="flex justify-between items-end mb-2">
                 <span className="font-sans text-[10px] uppercase tracking-widest font-bold text-theme-on-surface/60">Completion</span>
                 <span className="font-serif text-2xl text-theme-forest">{project.progress}%</span>
               </div>
-              <div className="w-full h-2 bg-theme-outline/20 rounded-full overflow-hidden mb-4">
+              <div className="w-full h-2 bg-theme-outline/20 rounded-full overflow-hidden mb-4 relative z-10">
                 <div className="h-full bg-theme-clay" style={{ width: `${project.progress}%` }}></div>
               </div>
-              <p className="text-xs text-theme-on-surface/70 font-sans text-center">
+              <p className="text-xs text-theme-on-surface/70 font-sans text-center relative z-10">
                 Target: {project.targetDeadline}
               </p>
-            </div>
+            </TexturedCard>
           </div>
         </div>
       </header>
