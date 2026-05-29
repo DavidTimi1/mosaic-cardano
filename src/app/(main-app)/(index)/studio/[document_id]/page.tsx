@@ -71,6 +71,7 @@ export default function StudioPage({ params }: { params: { document_id: string }
         project={project || null} 
         communityId={communityId} 
         projectId={projectId} 
+        artifactId={artifactId}
         nextPublishStep={nextPublishStep} 
       />
     </div>

@@ -8,6 +8,7 @@ export const ROUTES = {
   STUDIO: '/studio',
   PROFILE: '/profile', // generic profile
   NOTIFICATIONS: '/notifications',
+  ARTIFACT: (id: string) => `/artifact/${id}`,
 
   USER: (id: string, currentUserId?: string) => id === currentUserId ? '/profile' : `/u/${id}`,
 

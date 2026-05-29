@@ -12,6 +12,7 @@ export default function PublishingModal({
   project,
   communityId,
   projectId,
+  artifactId,
   nextPublishStep
 }: {
   publishStep: PublishStep;
@@ -19,6 +20,7 @@ export default function PublishingModal({
   project: ProjectDetail | null;
   communityId: string;
   projectId: string;
+  artifactId: string | null;
   nextPublishStep: (current: PublishStep) => void;
 }) {
   const router = useRouter();
@@ -183,15 +185,19 @@ export default function PublishingModal({
         )}
         
         {publishStep === 'success' && (
-          <div className="px-8 py-5 border-t border-theme-outline/20 bg-theme-surface-low flex justify-center">
+          <div className="px-8 py-5 border-t border-theme-outline/20 bg-theme-surface-low flex justify-center gap-4">
             <button 
               onClick={() => {
                 setPublishStep(null);
-                router.push(ROUTES.VILLAGE.PROJECT(communityId, projectId));
+                if (artifactId) {
+                  router.push(ROUTES.ARTIFACT(artifactId));
+                } else {
+                  router.push(ROUTES.VILLAGE.PROJECT(communityId, projectId));
+                }
               }}
               className="bg-theme-forest text-theme-parchment px-8 py-3 rounded-lg text-xs font-bold uppercase tracking-widest cursor-pointer hover:bg-theme-forest/90"
             >
-              Return to Project
+              View Publication
             </button>
           </div>
         )}
