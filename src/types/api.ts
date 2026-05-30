@@ -4,7 +4,7 @@ import {
   CommunityNodeSchema,
   NotificationNodeSchema,
   PagedResultMetaSchema,
-  ProjectNodeSchema,
+  // ProjectNodeSchema,
   UserNodeSchema,
   UUIDSchema,
 } from './schemas';
@@ -94,6 +94,7 @@ export const AuthStateResponseSchema = z.object({
       name: z.string().min(1),
       initials: z.string().min(1).max(3),
       avatarUrl: z.string().url().nullable(),
+      isOnboarded: z.boolean().default(false),
     })
     .nullable(),
 });
