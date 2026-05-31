@@ -8,6 +8,13 @@ export const API = {
         LOGOUT: '/api/auth/logout',
     },
 
+    HOME: {
+        ACTION_ITEMS: '/api/home/action-items',
+        ACTIVE_PROJECTS: '/api/home/active-projects',
+        COMMUNITY_UPDATES: '/api/home/community-updates',
+        SAVED_ITEMS: '/api/home/saved-items',
+    },
+
     ONBOARDING: {
         SET_INFO: '/api/onboarding',
         INSIGHTS: '/api/onboarding/insights',
@@ -23,6 +30,7 @@ export const API = {
         LEAVE: (communityId: string) => `/api/villages/${communityId}/leave`,
         DETAILS: (communityId: string) => `/api/villages/${communityId}`,
         MEMBERS: (communityId: string) => `/api/villages/${communityId}/members`,
+        MY: '/api/villages/me',
         LIST: '/api/villages',
     },
 } as const;

@@ -1,178 +1,126 @@
-import { useXQuery } from "@/lib/extended-react-query";
+import { API } from '@/lib/api-routes';
+import {
+  MOCK_HOME_ACTION_ITEMS,
+  MOCK_HOME_ACTIVE_PROJECTS,
+  MOCK_HOME_COMMUNITY_UPDATES,
+  MOCK_HOME_SAVED_ITEMS,
+} from '@/data/mock';
+import {
+  ACTION_ITEM_TYPE_LABELS,
+  HOME_QUERY_KEYS,
+  parseHomeActionItems,
+  parseHomeActiveProjects,
+  parseHomeCommunityUpdates,
+  parseSavedItems,
+} from '@/lib/home';
+import { useXQuery } from '@/lib/extended-react-query';
+import { fetchAPI } from './api';
 
-// ============================================================================
-// DUMMY DATA
-// ============================================================================
+export interface HomeActionItem {
+  id: string;
+  type: 'INVITE' | 'MENTION' | 'PROJECT_UPDATE';
+  title: string;
+  description: string;
+  timestamp: string;
+  source: string;
+  link: string;
+}
 
-const MOCK_ACTION_ITEMS = [
-  {
-    id: 'a1',
-    type: 'invitation',
-    title: 'Invitation to Collaborate',
-    description: 'You have been invited to join the "Nairobi Trail Runners" core mapping team.',
-    timestamp: '2 hours ago',
-    source: 'Nairobi Trail Runners',
-    link: '/inbox',
-  },
-  {
-    id: 'a2',
-    type: 'review',
-    title: 'Pending Artifact Review',
-    description: 'Amina D. requested your review on "Chapter 4: The Savannah Routes".',
-    timestamp: '5 hours ago',
-    source: 'Savannah Chronicles Project',
-    link: '/studio',
-  }
-];
+export interface HomeProjectSummary {
+  id: string;
+  title: string;
+  community: string;
+  description: string;
+  progress: number;
+  lastActivity: string;
+  collaborators: string[];
+  link: string;
+}
 
-const MOCK_ACTIVE_PROJECTS = [
-  {
-    id: 'p1',
-    title: 'Savannah Chronicles',
-    community: 'Nairobi Trail Runners',
-    description: 'Documenting the hidden trail routes through the eastern savannah.',
-    progress: 65,
-    lastActivity: 'Draft updated 3h ago by you',
-    collaborators: ['You', 'Amina D.', 'Kofi M.'],
-    link: '/studio',
-  },
-  {
-    id: 'p2',
-    title: 'Lagos Poetry Anthology Volume II',
-    community: 'Lagos Poetry Collective',
-    description: 'Curating the second volume of modern spoken word transcripts.',
-    progress: 30,
-    lastActivity: 'New submission pending review',
-    collaborators: ['You', 'Oluwaseun B.'],
-    link: '/studio',
-  }
-];
+export interface HomeCommunityUpdate {
+  id: string;
+  type: 'governance' | 'discussion' | 'treasury' | string;
+  community: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  status: string;
+  link: string;
+}
 
-const MOCK_COMMUNITY_UPDATES = [
-  {
-    id: 'u1',
-    type: 'governance',
-    community: 'Lagos Poetry Collective',
-    title: 'Vote: Allocate 5,000 SCR for the Annual Recital',
-    description: 'Proposal to use treasury funds to secure the venue for next month\'s event.',
-    timestamp: '1 day ago',
-    status: 'Active (Ends in 2 days)',
-    link: '/v/lagos-poetry/governance',
-  },
-  {
-    id: 'u2',
-    type: 'discussion',
-    community: 'Nairobi Trail Runners',
-    title: 'Urgent: Route 4 Washout',
-    description: 'Heavy rains have completely washed out the western bridge on Route 4. Avoid until further notice.',
-    timestamp: '12 hours ago',
-    status: 'Unread',
-    link: '/v/nairobi-trails/feed',
-  },
-  {
-    id: 'u3',
-    type: 'treasury',
-    community: 'Global Mosaic Common',
-    title: 'Quarterly Steward Stipends Distributed',
-    description: '12,500 SCR was distributed across 45 active stewards.',
-    timestamp: '2 days ago',
-    status: 'Completed',
-    link: '/treasury',
-  }
-];
+export interface SavedItemSummary {
+  id: string;
+  title: string;
+  type: string;
+  author: string;
+  link: string;
+}
 
-const MOCK_SAVED_ITEMS = [
-  {
-    id: 's1',
-    title: 'Best Practices for Archiving Oral History',
-    type: 'Publication',
-    author: 'Mosaic Research Guild',
-    link: '/v/mosaic-guild/library',
-  },
-  {
-    id: 's2',
-    title: 'Draft: Trail Markers Standards',
-    type: 'Project Draft',
-    author: 'Nairobi Trail Runners',
-    link: '/studio',
-  }
-];
-
-// Delay to simulate network request
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
-
-// ============================================================================
-// API IMPLEMENTATIONS (Commented out for future use)
-// ============================================================================
-
-/*
-export const fetchActionItems = async () => {
-  const res = await fetch('/api/user/action-items');
-  if (!res.ok) throw new Error('Failed to fetch action items');
-  return res.json();
+type ApiListResponse<T> = {
+  items?: T[];
+  data?: T[];
+  results?: T[];
 };
 
-export const fetchActiveProjects = async () => {
-  const res = await fetch('/api/user/active-projects');
-  if (!res.ok) throw new Error('Failed to fetch active projects');
-  return res.json();
+const unwrapList = <T>(payload: unknown): T[] => {
+  if (!payload || typeof payload !== 'object') {
+    return [];
+  }
+
+  const typedPayload = payload as ApiListResponse<T>;
+  return typedPayload.items ?? typedPayload.data ?? typedPayload.results ?? [];
 };
 
-export const fetchCommunityUpdates = async () => {
-  const res = await fetch('/api/user/community-updates');
-  if (!res.ok) throw new Error('Failed to fetch community updates');
-  return res.json();
+const fetchHomeItems = async <T>(url: string): Promise<T[]> => {
+  const res = await fetchAPI(url);
+  return unwrapList<T>(res);
 };
 
-export const fetchSavedItems = async () => {
-  const res = await fetch('/api/user/saved-items');
-  if (!res.ok) throw new Error('Failed to fetch saved items');
-  return res.json();
+const fetchHomeItemsWithFallback = async <T>(url: string, fallback: T[]): Promise<T[]> => {
+  try {
+    const items = await fetchHomeItems<T>(url);
+    return items.length > 0 ? items : fallback;
+  } catch {
+    return fallback;
+  }
 };
-*/
-
-
-// ============================================================================
-// REACT QUERY HOOKS (Using dummy data)
-// ============================================================================
 
 export const useGetActionItems = () => {
   return useXQuery({
-    queryKey: ['homeActionItems'],
-    queryFn: async () => {
-      await delay(600);
-      return MOCK_ACTION_ITEMS;
-    }
+    queryKey: HOME_QUERY_KEYS.ACTION_ITEMS,
+    queryFn: async () => parseHomeActionItems({
+      items: await fetchHomeItemsWithFallback(API.HOME.ACTION_ITEMS, [...MOCK_HOME_ACTION_ITEMS]),
+    }),
   });
+};
+
+export const getActionItemLabel = (type: HomeActionItem['type']) => {
+  return ACTION_ITEM_TYPE_LABELS[type] ?? type;
 };
 
 export const useGetActiveProjects = () => {
   return useXQuery({
-    queryKey: ['homeActiveProjects'],
-    queryFn: async () => {
-      await delay(800);
-      return MOCK_ACTIVE_PROJECTS;
-    }
+    queryKey: HOME_QUERY_KEYS.ACTIVE_PROJECTS,
+    queryFn: async () => parseHomeActiveProjects({
+      items: await fetchHomeItemsWithFallback(API.HOME.ACTIVE_PROJECTS, [...MOCK_HOME_ACTIVE_PROJECTS]),
+    }),
   });
 };
 
 export const useGetCommunityUpdates = () => {
   return useXQuery({
-    queryKey: ['homeCommunityUpdates'],
-    queryFn: async () => {
-      await delay(1000);
-      return MOCK_COMMUNITY_UPDATES;
-    }
+    queryKey: HOME_QUERY_KEYS.COMMUNITY_UPDATES,
+    queryFn: async () => parseHomeCommunityUpdates({
+      items: await fetchHomeItemsWithFallback(API.HOME.COMMUNITY_UPDATES, [...MOCK_HOME_COMMUNITY_UPDATES]),
+    }),
   });
 };
 
 export const useGetSavedItems = () => {
   return useXQuery({
-    queryKey: ['homeSavedItems'],
-    queryFn: async () => {
-      await delay(500);
-      return MOCK_SAVED_ITEMS;
-    }
+    queryKey: HOME_QUERY_KEYS.SAVED_ITEMS,
+    queryFn: async () => parseSavedItems({
+      items: await fetchHomeItemsWithFallback(API.HOME.SAVED_ITEMS, [...MOCK_HOME_SAVED_ITEMS]),
+    }),
   });
 };
