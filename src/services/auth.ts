@@ -53,16 +53,7 @@ export const useLogout = () => {
 export const useGetVillageMembership = (communityId: string) => {
   return useXQuery({
     queryKey: ['villageMembership', communityId],
-    queryFn: async () => {
-      // TODO: Replace with actual API call to check if user is a member of the specific village
-      // const res = await fetch(`/api/villages/${communityId}/membership`);
-      // return res.json();
-
-      return {
-        isMember: false, // Hardcoded to false for now
-        role: null,
-      };
-    }
+    queryFn: async () => fetchAPI(API.VILLAGE.MEMBERSHIP(communityId)) as Promise<{ isMember: boolean; role: string | null }>
   });
 };
 

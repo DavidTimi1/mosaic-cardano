@@ -23,6 +23,29 @@ export type VillageSummary = {
 };
 
 export const villageService = {
+	async checkCommunityMembership(userId: string, communityId: string): Promise<{ isMember: boolean; role: string | null }> {
+		const parsedUserId = z.string().uuid().parse(userId);
+		const parsedCommunityId = z.string().uuid().parse(communityId);
+
+		const rows = await runRead(
+			`
+				MATCH (u:User {id: $userId})
+				OPTIONAL MATCH (u)-[membership:MEMBER_OF]->(:Community {id: $communityId})
+				RETURN count(membership) > 0 AS isMember, head(collect(membership.role)) AS role
+			`,
+			{
+				userId: parsedUserId,
+				communityId: parsedCommunityId,
+			},
+			row => ({
+				isMember: Boolean(row.isMember),
+				role: (row.role as string | null) ?? null,
+			}),
+		);
+
+		return rows[0] ?? { isMember: false, role: null };
+	},
+
 	async joinCommunity(input: z.infer<typeof JoinCommunityRequestSchema>): Promise<void> {
 		const parsed = JoinCommunityRequestSchema.parse(input);
 		const now = Date.now();

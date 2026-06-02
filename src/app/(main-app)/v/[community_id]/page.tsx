@@ -283,11 +283,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Partner Guilds</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.partners?.join(' and ')}</p>
+                          <p className="font-medium text-theme-forest">{String((focusedItem.details?.partners as string[] | undefined)?.join(' and ') ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Timeline</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.duration}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.duration ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -296,11 +296,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Author</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.author}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.author ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Date Published</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.publishedDate}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.publishedDate ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -309,11 +309,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Member Count</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.membersCount} active contributors</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.membersCount ?? '')} active contributors</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Established</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.activeSince}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.activeSince ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -322,11 +322,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Stewards Needed</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.rolesNeeded?.join(', ')}</p>
+                          <p className="font-medium text-theme-forest">{String((focusedItem.details?.rolesNeeded as string[] | undefined)?.join(', ') ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Application Deadline</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.deadline}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.deadline ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -335,11 +335,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Stipend Allocation</p>
-                          <p className="font-medium text-theme-forest font-mono">{focusedItem.details.stipend}</p>
+                          <p className="font-medium text-theme-forest font-mono">{String(focusedItem.details?.stipend ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Program Duration</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.duration}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.duration ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -348,11 +348,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Curator / Steward</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.curator}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.curator ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Archived Materials</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.totalArtifacts} records</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.totalArtifacts ?? '')} records</p>
                         </div>
                       </div>
                     )}
@@ -361,11 +361,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Funding Disbursed</p>
-                          <p className="font-medium text-theme-forest font-mono">{focusedItem.details.fundingAmount}</p>
+                          <p className="font-medium text-theme-forest font-mono">{String(focusedItem.details?.fundingAmount ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Consensus Date</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.dateApproved}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.dateApproved ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -373,11 +373,11 @@ export default function CommunityPublicProfile() {
                     <div className="grid grid-cols-2 gap-4 pt-2">
                       <div>
                         <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Visibility Level</p>
-                        <p className="font-medium text-theme-forest">{focusedItem.visibility}</p>
+                        <p className="font-medium text-theme-forest">{String(focusedItem.visibility ?? '')}</p>
                       </div>
                       <div>
                         <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Format</p>
-                        <p className="font-medium text-theme-forest">{focusedItem.format}</p>
+                        <p className="font-medium text-theme-forest">{String(focusedItem.format ?? '')}</p>
                       </div>
                     </div>
                   </div>

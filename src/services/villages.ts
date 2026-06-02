@@ -44,38 +44,23 @@ const mapVillageToCard = (village: VillageSummary) => ({
   icon: village.icon ?? '🏛️',
 });
 
-const fetchVillageListWithFallback = async <T>(url: string, fallback: T[]): Promise<T[]> => {
-  try {
-    const response = await fetchAPI(url);
-    const items = Array.isArray((response as { items?: T[] } | null)?.items)
-      ? (response as { items: T[] }).items
-      : Array.isArray((response as { data?: T[] } | null)?.data)
-        ? (response as { data: T[] }).data
-        : Array.isArray((response as { results?: T[] } | null)?.results)
-          ? (response as { results: T[] }).results
-          : [];
-
-    return items.length > 0 ? items : fallback;
-  } catch {
-    return fallback;
+const unwrapVillageList = <T>(response: unknown): T[] => {
+  if (!response || typeof response !== 'object') {
+    return [];
   }
+
+  const typedResponse = response as { items?: T[]; data?: T[]; results?: T[] };
+  return typedResponse.items ?? typedResponse.data ?? typedResponse.results ?? [];
+};
+
+const fetchVillageList = async <T>(url: string): Promise<T[]> => {
+  const response = await fetchAPI(url);
+  return unwrapVillageList<T>(response);
 };
 
 const fetchFeaturedVillageCards = async () => {
-  try {
-    const response = await fetchAPI(API.VILLAGE.LIST);
-    const items = Array.isArray((response as { items?: VillageSummary[] } | null)?.items)
-      ? (response as { items: VillageSummary[] }).items
-      : Array.isArray((response as { data?: VillageSummary[] } | null)?.data)
-        ? (response as { data: VillageSummary[] }).data
-        : Array.isArray((response as { results?: VillageSummary[] } | null)?.results)
-          ? (response as { results: VillageSummary[] }).results
-          : [];
-
-    return items.length > 0 ? items.map(mapVillageToCard) : [...MOCK_FEATURED_VILLAGE_CARDS];
-  } catch {
-    return [...MOCK_FEATURED_VILLAGE_CARDS];
-  }
+  const items = await fetchVillageList<VillageSummary>(API.VILLAGE.LIST);
+  return items.map(mapVillageToCard);
 };
 
 // --- Hooks ---
@@ -143,7 +128,7 @@ export const useGetFeaturedVillages = () => {
 export const useGetMyVillages = (enabled = true) => {
   return useXQuery({
     queryKey: ['myVillages'],
-    queryFn: () => fetchVillageListWithFallback<VillageSummary>(API.VILLAGE.MY, MOCK_MY_VILLAGES as unknown as VillageSummary[]),
+    queryFn: () => fetchVillageList<VillageSummary>(API.VILLAGE.MY),
     enabled,
   });
 };
