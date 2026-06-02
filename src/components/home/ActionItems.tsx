@@ -3,23 +3,38 @@ import React from 'react';
 import Link from 'next/link';
 import { getActionItemLabel, useGetActionItems } from '@/services/home';
 import { Mail, Edit3, ArrowRight } from 'lucide-react';
+import { StatePanel } from '@/components/ui/StatePanel';
 
 export default function ActionItems() {
-  const { data: items, isLoading } = useGetActionItems();
+  const { data: items, isLoading, isError, error, refetch } = useGetActionItems();
 
   if (isLoading) {
+    return <StatePanel variant="loading" title="Loading attention items" description="We are checking for invitations, mentions, and project updates." className="mb-12" />;
+  }
+
+  if (isError) {
     return (
-      <div className="animate-pulse space-y-4 mb-12">
-        <div className="h-6 w-48 bg-theme-outline/20 rounded"></div>
-        <div className="flex gap-4">
-          <div className="h-24 flex-1 bg-theme-surface-high rounded-xl border border-theme-outline/20"></div>
-          <div className="h-24 flex-1 bg-theme-surface-high rounded-xl border border-theme-outline/20"></div>
-        </div>
-      </div>
+      <StatePanel
+        variant="error"
+        title="Could not load attention items"
+        description="Something went wrong while fetching the items that need your attention."
+        errorMessage={error instanceof Error ? error.message : 'Failed to load attention items.'}
+        onRetry={() => void refetch()}
+        className="mb-12"
+      />
     );
   }
 
-  if (!items || items.length === 0) return null;
+  if (!items || items.length === 0) {
+    return (
+      <StatePanel
+        variant="empty"
+        title="Nothing needs your attention"
+        description="When invitations, mentions, or project updates arrive, they will show up here."
+        className="mb-12"
+      />
+    );
+  }
 
   return (
     <div className="mb-12">

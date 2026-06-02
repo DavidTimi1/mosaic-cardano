@@ -1,11 +1,5 @@
 import { API } from '@/lib/api-routes';
 import {
-  MOCK_HOME_ACTION_ITEMS,
-  MOCK_HOME_ACTIVE_PROJECTS,
-  MOCK_HOME_COMMUNITY_UPDATES,
-  MOCK_HOME_SAVED_ITEMS,
-} from '@/data/mock';
-import {
   ACTION_ITEM_TYPE_LABELS,
   HOME_QUERY_KEYS,
   parseHomeActionItems,
@@ -76,20 +70,11 @@ const fetchHomeItems = async <T>(url: string): Promise<T[]> => {
   return unwrapList<T>(res);
 };
 
-const fetchHomeItemsWithFallback = async <T>(url: string, fallback: T[]): Promise<T[]> => {
-  try {
-    const items = await fetchHomeItems<T>(url);
-    return items.length > 0 ? items : fallback;
-  } catch {
-    return fallback;
-  }
-};
-
 export const useGetActionItems = () => {
   return useXQuery({
     queryKey: HOME_QUERY_KEYS.ACTION_ITEMS,
     queryFn: async () => parseHomeActionItems({
-      items: await fetchHomeItemsWithFallback(API.HOME.ACTION_ITEMS, [...MOCK_HOME_ACTION_ITEMS]),
+      items: await fetchHomeItems(API.HOME.ACTION_ITEMS),
     }),
   });
 };
@@ -102,7 +87,7 @@ export const useGetActiveProjects = () => {
   return useXQuery({
     queryKey: HOME_QUERY_KEYS.ACTIVE_PROJECTS,
     queryFn: async () => parseHomeActiveProjects({
-      items: await fetchHomeItemsWithFallback(API.HOME.ACTIVE_PROJECTS, [...MOCK_HOME_ACTIVE_PROJECTS]),
+      items: await fetchHomeItems(API.HOME.ACTIVE_PROJECTS),
     }),
   });
 };
@@ -111,7 +96,7 @@ export const useGetCommunityUpdates = () => {
   return useXQuery({
     queryKey: HOME_QUERY_KEYS.COMMUNITY_UPDATES,
     queryFn: async () => parseHomeCommunityUpdates({
-      items: await fetchHomeItemsWithFallback(API.HOME.COMMUNITY_UPDATES, [...MOCK_HOME_COMMUNITY_UPDATES]),
+      items: await fetchHomeItems(API.HOME.COMMUNITY_UPDATES),
     }),
   });
 };
@@ -120,7 +105,7 @@ export const useGetSavedItems = () => {
   return useXQuery({
     queryKey: HOME_QUERY_KEYS.SAVED_ITEMS,
     queryFn: async () => parseSavedItems({
-      items: await fetchHomeItemsWithFallback(API.HOME.SAVED_ITEMS, [...MOCK_HOME_SAVED_ITEMS]),
+      items: await fetchHomeItems(API.HOME.SAVED_ITEMS),
     }),
   });
 };
