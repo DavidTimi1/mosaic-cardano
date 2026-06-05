@@ -1,27 +1,30 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Mail, ArrowLeft, Key } from 'lucide-react';
+import { User, Mail, ArrowLeft, Key, Check, X, Loader2 } from 'lucide-react';
 import { PERKS, MOSAIC_EASE } from '../lib/data';
 import { Button } from './ui/button';
 import { FormError } from './ui/form-error';
 import Link from 'next/link';
 import { DecorativeGrid } from './ui/decorative-grid';
 import MosaicBrand from './ui/icons/MosaicBrand';
-import { useLogin, useRegister } from '@/services/auth';
+import { useLogin, useRegister, useUsernameCheck } from '@/services/auth';
 import { ROUTES } from '@/lib/routes';
 import { useRouter } from 'next/navigation';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface AuthFormData {
   email: string;
   password: string;
   name?: string;
+  username: string;
 }
 
 const initialData = {
   email: '',
   password: '',
   name: '',
+  username: '',
 }
 
 export default function AuthView() {
@@ -30,12 +33,16 @@ export default function AuthView() {
   const router = useRouter();
 
   const [formData, setFormData] = useState<AuthFormData>(initialData);
+  const debouncedUsername = useDebounce(formData.username, 500);
+  const { available: isUsernameValid, error: usernameCheckError, isLoading: isLoadingUsername } = useUsernameCheck(debouncedUsername, mode === 'signup');
+  const usernameError = usernameCheckError?.message;
 
   const logUserIn = useLogin();
   const registerUser = useRegister();
   const isLoading = logUserIn.isPending || registerUser.isPending;
   const isError = logUserIn.isError || registerUser.isError;
   const error = mode === 'signin' ? logUserIn.error : registerUser.error;
+  const isSuccessful = logUserIn.isSuccess || registerUser.isSuccess;
 
   useEffect(() => {
     const timer = setInterval(() => setPerkIndex(p => (p + 1) % PERKS.length), 4000);
@@ -50,7 +57,7 @@ export default function AuthView() {
     try {
     if (mode === 'signup') {
       await registerUser.mutateAsync({
-        username: formData.email.split('@')[0]?.replace(/[^a-zA-Z0-9_]/g, '_') || 'mosaic_user',
+        username: formData.username,
         displayName: String(formData.name || 'Mosaic User'),
         email: formData.email,
         password: formData.password,
@@ -129,6 +136,30 @@ export default function AuthView() {
                 </div>
               </div>
             )}
+            
+            {mode === 'signup' && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-theme-on-surface/60 flex justify-between">
+                  <span>Username</span>
+                  {usernameError && <span className="text-red-500 font-normal normal-case">{usernameError}</span>}
+                </label>
+                <div className="relative">
+                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-theme-on-surface/40" />
+                  <input required name="username" type="text" placeholder="david_artisan" className="w-full bg-theme-surface-high border border-theme-outline/20 rounded-2xl py-4 pl-12 pr-12 outline-none focus:border-theme-forest transition-all text-theme-forest placeholder:text-theme-on-surface/30 shadow-sm" 
+                    onChange={handleInputChange} value={formData.username}                 
+                  />
+                  {isLoadingUsername && (
+                    <Loader2 size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-theme-on-surface/40 animate-spin" />
+                  )}
+                  {!isLoadingUsername && isUsernameValid && formData.username && (
+                    <Check size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500" />
+                  )}
+                  {!isLoadingUsername && usernameError && formData.username && (
+                    <X size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500" />
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-theme-on-surface/60">Email</label>
@@ -152,7 +183,7 @@ export default function AuthView() {
 
             <FormError message={isError ? error!.message || "An unknown error occurred" : ''} />
 
-            <Button className='w-full shadow-xl' type="submit" isLoading={isLoading} size="lg">
+            <Button className='w-full shadow-xl' type="submit" isLoading={isLoading || isSuccessful} size="lg" disabled={isSuccessful || (mode === 'signup' && (!isUsernameValid || isLoadingUsername))}>
               {mode === 'signup' ? 'Join the Village' : 'Sign In'}
             </Button>
           </form>

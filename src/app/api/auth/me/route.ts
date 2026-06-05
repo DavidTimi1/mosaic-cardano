@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { authService } from '@/services/backend/auth.service';
 import { AuthStateResponseSchema } from '@/types/api';
-import { getAuthSessionByToken, sessionCookieName } from '@/lib/backend/session';
+import { getRequestUserId } from '@/lib/backend/request';
 
 export const runtime = 'nodejs';
 
@@ -15,6 +15,7 @@ const toAuthState = (user: Awaited<ReturnType<typeof authService.getUserById>>) 
     isAuthenticated: true,
     user: {
       id: user.id,
+      username: user.username,
       name: user.displayName,
       initials: user.displayName
         .split(/\s+/)
@@ -30,19 +31,12 @@ const toAuthState = (user: Awaited<ReturnType<typeof authService.getUserById>>) 
 };
 
 export async function GET(request: Request) {
-  const cookieHeader = request.headers.get('cookie') || '';
-  const token = cookieHeader
-    .split(';')
-    .map(part => part.trim())
-    .find(part => part.startsWith(`${sessionCookieName}=`))
-    ?.split('=')[1];
-
-  const session = await getAuthSessionByToken(token ? decodeURIComponent(token) : undefined);
-  if (!session) {
+  const userId = await getRequestUserId(request);
+  if (!userId) {
     return NextResponse.json(AuthStateResponseSchema.parse({ isAuthenticated: false, user: null }));
   }
 
-  const user = await authService.getUserById(session.userId);
+  const user = await authService.getUserById(userId);
   if (!user) {
     return NextResponse.json(AuthStateResponseSchema.parse({ isAuthenticated: false, user: null }));
   }

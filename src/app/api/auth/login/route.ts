@@ -15,6 +15,7 @@ const toAuthState = (user: Awaited<ReturnType<typeof authService.getUserById>>) 
     isAuthenticated: true,
     user: {
       id: user.id,
+      username: user.username,
       name: user.displayName,
       initials: user.displayName
         .split(/\s+/)

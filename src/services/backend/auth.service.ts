@@ -21,7 +21,16 @@ const UpsertUserInputSchema = z.object({
 	id: z.string().uuid(),
 	username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/),
 	displayName: z.string().min(1),
+	bio: z.string().max(500).optional(),
+	walletAddress: z.string().optional(),
 });
+
+const UpdateProfileInputSchema = z.object({
+	userId: z.string().uuid(),
+	displayName: z.string().min(1).optional(),
+	bio: z.string().max(500).optional(),
+});
+
 
 const LOGIN_WINDOW_SECONDS = 15 * 60;
 const MAX_FAILED_ATTEMPTS_PER_EMAIL = 8;
@@ -187,11 +196,15 @@ row => mapUserNode(row.user),
 				ON CREATE SET
 					u.username = $username,
 					u.displayName = $displayName,
+					u.bio = $bio,
+					u.walletAddress = $walletAddress,
 					u.isOnboarded = false,
 					u.createdAt = $now
 				ON MATCH SET
 					u.username = $username,
 					u.displayName = $displayName,
+					u.bio = $bio,
+					u.walletAddress = $walletAddress,
 					u.updatedAt = $now
 				RETURN u AS user
 			`,
@@ -199,6 +212,8 @@ row => mapUserNode(row.user),
 				id: parsed.id,
 				username: parsed.username,
 				displayName: parsed.displayName,
+				bio: parsed.bio ?? null,
+				walletAddress: parsed.walletAddress ?? null,
 				now,
 			},
 			row => mapUserNode(row.user),
@@ -230,6 +245,59 @@ row => mapUserNode(row.user),
 			},
 			120,
 		);
+	},
+
+	async getUserByUsername(username: string): Promise<UserNode | null> {
+		const rows = await runRead(
+			`
+				MATCH (u:User {username: $username})
+				RETURN u AS user
+				LIMIT 1
+			`,
+			{ username },
+			row => mapUserNode(row.user),
+		);
+
+		return rows[0] ?? null;
+	},
+
+	async updateProfile(input: z.infer<typeof UpdateProfileInputSchema>): Promise<UserNode> {
+		const parsed = UpdateProfileInputSchema.parse(input);
+		const now = Date.now();
+
+		const setClauses = [];
+		const params: Record<string, string | number> = { userId: parsed.userId, now };
+
+		if (parsed.displayName !== undefined) {
+			setClauses.push(`u.displayName = $displayName`);
+			params.displayName = parsed.displayName;
+		}
+		if (parsed.bio !== undefined) {
+			setClauses.push(`u.bio = $bio`);
+			params.bio = parsed.bio;
+		}
+
+		if (setClauses.length === 0) {
+			const user = await this.getUserById(parsed.userId);
+			if (!user) throw new Error('User not found');
+			return user;
+		}
+
+		setClauses.push(`u.updatedAt = $now`);
+
+		const rows = await runWrite(
+			`
+				MATCH (u:User {id: $userId})
+				SET ${setClauses.join(', ')}
+				RETURN u AS user
+			`,
+			params,
+			row => mapUserNode(row.user),
+		);
+
+		if (!rows[0]) throw new Error('User not found');
+		await invalidateCacheKey(cacheKey('user', parsed.userId));
+		return rows[0];
 	},
 
 	async setOnboarded(userId: string): Promise<void> {
