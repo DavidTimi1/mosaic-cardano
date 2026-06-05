@@ -5,10 +5,7 @@ import { CommunityNodeSchema, UserNodeSchema, type CommunityNode, type UserNode 
 import { cacheAside, cacheKey, invalidateCachePattern } from './cache';
 import { runRead, runWrite } from './shared';
 
-const listMembersInput = z.object({
-	communityId: z.string().uuid(),
-	limit: z.number().int().positive().max(200).default(50),
-});
+
 
 const listVillagesInput = z.object({
 	limit: z.number().int().positive().max(100).default(10),
@@ -23,6 +20,45 @@ export type VillageSummary = {
 };
 
 export const villageService = {
+	async createCommunity(userId: string, input: { name: string; description?: string; tags?: string[] }): Promise<CommunityNode> {
+		const parsedUserId = z.string().uuid().parse(userId);
+		const id = crypto.randomUUID();
+		const slug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+		const now = Date.now();
+
+		const rows = await runWrite(
+			`
+				MERGE (c:Community {slug: $slug})
+				ON CREATE SET
+					c.id = $id,
+					c.name = $name,
+					c.description = $description,
+					c.createdAt = $now
+				WITH c
+				MATCH (u:User {id: $userId})
+				MERGE (u)-[m:MEMBER_OF]->(c)
+				ON CREATE SET m.joinedAt = $now, m.role = 'ADMIN'
+				RETURN c AS community
+			`,
+			{
+				id,
+				slug,
+				name: input.name,
+				description: input.description ?? null,
+				userId: parsedUserId,
+				now,
+			},
+			row => CommunityNodeSchema.parse(row.community),
+		);
+
+		if (!rows[0]) throw new Error('Failed to create community');
+		
+		await invalidateCachePattern(cacheKey('community', 'featured', '*'));
+		await invalidateCachePattern(cacheKey('community', 'mine', parsedUserId, '*'));
+
+		return rows[0];
+	},
+
 	async checkCommunityMembership(userId: string, communityId: string): Promise<{ isMember: boolean; role: string | null }> {
 		const parsedUserId = z.string().uuid().parse(userId);
 		const parsedCommunityId = z.string().uuid().parse(communityId);
@@ -96,20 +132,20 @@ export const villageService = {
 		]);
 	},
 
-	async getCommunityById(communityId: string): Promise<CommunityNode | null> {
-		const parsedCommunityId = z.string().uuid().parse(communityId);
-		const key = cacheKey('community', parsedCommunityId, 'details');
+	async getCommunityByIdOrSlug(idOrSlug: string): Promise<CommunityNode | null> {
+		const key = cacheKey('community', idOrSlug, 'details');
 
 		return cacheAside(
 			key,
 			async () => {
 				const rows = await runRead(
 					`
-						MATCH (c:Community {id: $communityId})
+						MATCH (c:Community)
+						WHERE c.id = $idOrSlug OR c.slug = $idOrSlug
 						RETURN c AS community
 						LIMIT 1
 					`,
-					{ communityId: parsedCommunityId },
+					{ idOrSlug },
 					row => CommunityNodeSchema.parse(row.community),
 				);
 
@@ -119,23 +155,24 @@ export const villageService = {
 		);
 	},
 
-	async listCommunityMembers(communityId: string, limit = 50): Promise<UserNode[]> {
-		const parsed = listMembersInput.parse({ communityId, limit });
-		const key = cacheKey('community', parsed.communityId, 'members', parsed.limit);
+	async listCommunityMembers(idOrSlug: string, limit = 50): Promise<UserNode[]> {
+		const key = cacheKey('community', idOrSlug, 'members', limit);
 
 		return cacheAside(
 			key,
 			async () => {
 				return runRead(
 					`
-						MATCH (u:User)-[:MEMBER_OF]->(:Community {id: $communityId})
+						MATCH (c:Community)
+						WHERE c.id = $idOrSlug OR c.slug = $idOrSlug
+						MATCH (u:User)-[:MEMBER_OF]->(c)
 						RETURN u AS user
 						ORDER BY u.createdAt DESC
 						LIMIT toInteger($limit)
 					`,
 					{
-						communityId: parsed.communityId,
-						limit: parsed.limit,
+						idOrSlug,
+						limit,
 					},
 					row => UserNodeSchema.parse(row.user),
 				);

@@ -1,12 +1,6 @@
 import { API } from '@/lib/api-routes';
 import {
   MOCK_FEATURED_ARTIFACTS,
-  MOCK_FEATURED_VILLAGE_CARDS,
-  MOCK_MY_VILLAGES,
-  MOCK_TREASURY_ALLOCATIONS,
-  MOCK_VILLAGE_DETAILS,
-  MOCK_VILLAGE_FEATURED_WORKS,
-  MOCK_VILLAGE_MEMBERS,
   MOCK_VILLAGE_NEEDS,
   MOCK_VILLAGE_PROJECTS,
   MOCK_VILLAGE_STREAM,
@@ -32,6 +26,25 @@ export interface VillageSummary {
   profileImageUrl?: string | null;
   memberCount?: number;
   icon?: string;
+}
+
+export interface VillageFeaturedWork {
+  id: string;
+  title: string;
+  desc: string;
+  tags: string[];
+  contributors: number;
+}
+
+export interface VillageTreasury {
+  balance: string;
+  recentAllocations: { label: string; amount: string }[];
+}
+
+export interface VillageMember {
+  id: string;
+  displayName: string;
+  role?: string;
 }
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -65,11 +78,10 @@ const fetchFeaturedVillageCards = async () => {
 
 // --- Hooks ---
 export const useGetVillageDetails = (id: string) => {
-  return useXQuery({
+  return useXQuery<VillageDetail | null>({
     queryKey: ['villageDetails', id],
     queryFn: async () => {
-      await delay(5000);
-      return MOCK_VILLAGE_DETAILS[id] || null;
+      return fetchAPI(`/api/villages/${id}`) as Promise<VillageDetail | null>;
     }
   });
 };
@@ -138,42 +150,14 @@ export const useCreateVillage = () => {
   
   return useMutation({
     mutationFn: async (data: { name: string; description: string; tags: string[] }) => {
-      await delay(1500); // simulate network
-      
-      const newId = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      
-      // Update featured villages
-      MOCK_FEATURED_VILLAGE_CARDS.unshift({
-        id: newId,
-        name: data.name,
-        desc: data.description,
-        members: 1,
-        icon: '🌱'
-      });
-
-      MOCK_MY_VILLAGES.unshift({
-        id: newId,
-        name: data.name,
-        description: data.description,
-        profileImageUrl: null,
-        memberCount: 1,
-        icon: '🌱',
-      } as typeof MOCK_MY_VILLAGES[0]);
-      
-      // Add village details
-      MOCK_VILLAGE_DETAILS[newId] = {
-        id: newId,
-        name: data.name,
-        description: data.description,
-        memberCount: 1,
-        treasuryBalance: '0 SCR',
-        isMember: true,
-      };
-      
-      return newId;
+      return fetchAPI('/api/villages', {
+        method: 'POST',
+        data: data,
+      }) as Promise<{ id: string }>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['featuredVillages'] });
+      queryClient.invalidateQueries({ queryKey: ['myVillages'] });
     }
   });
 };
@@ -189,31 +173,28 @@ export const useGetFeaturedArtifacts = () => {
 };
 
 export const useGetVillageFeaturedWorks = (villageId: string) => {
-  return useXQuery({
+  return useXQuery<VillageFeaturedWork[]>({
     queryKey: ['villageFeaturedWorks', villageId],
     queryFn: async () => {
-      await delay(500);
-      return MOCK_VILLAGE_FEATURED_WORKS;
+      return fetchAPI(`/api/villages/${villageId}/works`) as Promise<VillageFeaturedWork[]>;
     }
   });
 };
 
 export const useGetVillageTreasuryAllocations = (villageId: string) => {
-  return useXQuery({
+  return useXQuery<VillageTreasury>({
     queryKey: ['villageTreasuryAllocations', villageId],
     queryFn: async () => {
-      await delay(400);
-      return MOCK_TREASURY_ALLOCATIONS;
+      return fetchAPI(`/api/villages/${villageId}/treasury`) as Promise<VillageTreasury>;
     }
   });
 };
 
 export const useGetVillageMembers = (villageId: string) => {
-  return useXQuery({
+  return useXQuery<VillageMember[]>({
     queryKey: ['villageMembers', villageId],
     queryFn: async () => {
-      await delay(300);
-      return MOCK_VILLAGE_MEMBERS;
+      return fetchAPI(`/api/villages/${villageId}/members`) as Promise<VillageMember[]>;
     }
   });
 };
