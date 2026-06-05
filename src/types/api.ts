@@ -91,6 +91,7 @@ export const AuthStateResponseSchema = z.object({
   user: z
     .object({
       id: z.string().uuid(),
+      username: z.string().min(3),
       name: z.string().min(1),
       initials: z.string().min(1).max(3),
       avatarUrl: z.string().url().nullable(),

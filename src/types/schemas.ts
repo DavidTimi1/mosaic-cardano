@@ -20,7 +20,11 @@ export const UserNodeSchema = z.object({
   id: UUIDSchema,
   username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/),
   displayName: z.string().min(1),
+  bio: z.string().max(500).optional(),
+  walletAddress: z.string().optional(),
+  isVerified: z.boolean().default(false),
   isOnboarded: z.boolean().default(false),
+  settings: z.string().optional(),
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema.optional(),
 });
