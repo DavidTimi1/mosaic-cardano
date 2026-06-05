@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode } from 'react';
 import { BellIcon, PlusIcon, User, Palette, Award, LogOut, User2Icon } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -14,14 +14,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import CreateProjectModal from '../project/CreateProjectModal';
+import { useModals } from '@/contexts/modals-context';
+import { MODALS } from '@/lib/modals';
 
 function TopAppBar() {
   const { data: authState } = useGetAuthState();
   const isAuthenticated = authState?.isAuthenticated;
   const user = authState?.user;
 
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { openModal } = useModals();
 
   return (
     <>
@@ -46,7 +47,7 @@ function TopAppBar() {
               <DropdownMenuItem>
                 Create a Collaboration
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsCreateModalOpen(true)}>
+              <DropdownMenuItem onClick={() => openModal(MODALS.CREATE_PROJECT)}>
                 Create a new Project
               </DropdownMenuItem>
               <DropdownMenuItem>
@@ -123,11 +124,7 @@ function TopAppBar() {
       </div>
     </header>
 
-      
-      <CreateProjectModal
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)}
-      />
+
     </>
   );
 }
