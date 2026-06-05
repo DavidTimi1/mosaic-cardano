@@ -15,10 +15,7 @@ export const OnboardedGuard = ({ awaitUser, children, loader }: { awaitUser?: bo
         if (!isLoadedAuthState || !data?.user) {
             return;
         }
-        if (data.user.isOnboarded) {
-            router.push(ROUTES.HOME);
-
-        } else {
+        if (!data.user.isOnboarded) {
             router.push(ROUTES.ONBOARDING);
         }
 
