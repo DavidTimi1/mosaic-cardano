@@ -6,6 +6,7 @@ export const API = {
         LOGIN: '/api/auth/login',
         REGISTER: '/api/auth/register',
         LOGOUT: '/api/auth/logout',
+        USERNAME_CHECK: (username: string) => `/api/auth/check-username?username=${username}`,
     },
 
     HOME: {
