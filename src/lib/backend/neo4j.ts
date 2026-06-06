@@ -1,13 +1,8 @@
 import neo4j, { Driver } from 'neo4j-driver';
 
 const URI = process.env.NEO4J_URI || 'bolt://localhost:7687';
-const USER = process.env.NEO4J_USERNAME || 'neo4j';
-const PASSWORD = process.env.NEO4J_PASSWORD;
-
-if (!PASSWORD) {
-  throw new Error('NEO4J_PASSWORD is missing');
-}
-
+const USER = process.env.NEO4J_USERNAME || '';
+const PASSWORD = process.env.NEO4J_PASSWORD || '';
 
 interface GlobalNeo4j {
   neo4jDriver?: Driver;
