@@ -2,6 +2,7 @@
 
 import { useGetAuthState, useLogout } from "@/services/auth";
 import { createContext, useContext } from "react";
+import { toast } from "sonner";
 
 
 const AuthContext = createContext<{
@@ -13,7 +14,7 @@ const AuthContext = createContext<{
     userId: null,
     isLoaded: false,
     logout: () => Promise.resolve(),
-    refetchAuthState: () => {},
+    refetchAuthState: () => { },
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -21,8 +22,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const userId = authState?.user?.id || null;
     const logoutMutation = useLogout();
 
-    const logout = async () => {
+    const logout = async (isForced = false) => {
         await logoutMutation.mutateAsync();
+
+        if (isForced) {
+            toast.info("Your session has expired, please log back in to continue");
+        } else {
+            toast.success("You have been logged out successfully");
+        }
     };
 
     return (

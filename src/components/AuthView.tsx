@@ -55,31 +55,31 @@ export default function AuthView() {
     if (isLoading) return;
 
     try {
-    if (mode === 'signup') {
-      await registerUser.mutateAsync({
-        username: formData.username,
-        displayName: String(formData.name || 'Mosaic User'),
-        email: formData.email,
-        password: formData.password,
-      });
+      if (mode === 'signup') {
+        await registerUser.mutateAsync({
+          username: formData.username,
+          displayName: String(formData.name || 'Mosaic User'),
+          email: formData.email,
+          password: formData.password,
+        });
 
-      router.push(ROUTES.ONBOARDING);
+        router.push(ROUTES.ONBOARDING);
 
-    } else {
-      await logUserIn.mutateAsync({ email: formData.email, password: formData.password });
+      } else {
+        await logUserIn.mutateAsync({ email: formData.email, password: formData.password });
 
-      router.push(ROUTES.HOME);
+        router.push(ROUTES.HOME);
+      }
+
+
+    } catch {
+      // do sumn
     }
-
-
-  } catch {
-    // do sumn
-  }
   }
 
   return (
     <div className="min-h-screen flex w-full relative z-20">
-      
+
       {/* Left Column - Graphic/Info */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-theme-forest text-theme-parchment flex-col justify-center px-24">
 
@@ -111,11 +111,11 @@ export default function AuthView() {
         </Link>
 
         <motion.div initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 1, ease: MOSAIC_EASE }} className="max-w-md w-full mx-auto">
-          
+
           <div className="mb-12 space-y-6">
             <MosaicBrand />
-            
-            
+
+
             <h2 className="font-serif text-4xl mb-2 text-theme-forest">
               {mode === 'signup' ? 'Create an Account.' : 'Welcome back.'}
             </h2>
@@ -126,39 +126,40 @@ export default function AuthView() {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             {mode === 'signup' && (
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-theme-on-surface/60">Display Name</label>
-                <div className="relative">
-                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-theme-on-surface/40" />
-                  <input required name="name" type="text" placeholder="David Artisan" className="w-full bg-theme-surface-high border border-theme-outline/20 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-theme-forest transition-all text-theme-forest placeholder:text-theme-on-surface/30 shadow-sm" 
-                    onChange={handleInputChange}                  
-                  />
+              <>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-theme-on-surface/60">Display Name</label>
+                  <div className="relative">
+                    <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-theme-on-surface/40" />
+                    <input required name="name" type="text" placeholder="David Artisan" className="w-full bg-theme-surface-high border border-theme-outline/20 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-theme-forest transition-all text-theme-forest placeholder:text-theme-on-surface/30 shadow-sm"
+                      onChange={handleInputChange}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-            
-            {mode === 'signup' && (
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-theme-on-surface/60 flex justify-between">
-                  <span>Username</span>
-                  {usernameError && <span className="text-red-500 font-normal normal-case">{usernameError}</span>}
-                </label>
-                <div className="relative">
-                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-theme-on-surface/40" />
-                  <input required name="username" type="text" placeholder="david_artisan" className="w-full bg-theme-surface-high border border-theme-outline/20 rounded-2xl py-4 pl-12 pr-12 outline-none focus:border-theme-forest transition-all text-theme-forest placeholder:text-theme-on-surface/30 shadow-sm" 
-                    onChange={handleInputChange} value={formData.username}                 
-                  />
-                  {isLoadingUsername && (
-                    <Loader2 size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-theme-on-surface/40 animate-spin" />
-                  )}
-                  {!isLoadingUsername && isUsernameValid && formData.username && (
-                    <Check size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500" />
-                  )}
-                  {!isLoadingUsername && usernameError && formData.username && (
-                    <X size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500" />
-                  )}
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-theme-on-surface/60 flex justify-between">
+                    <span>Username</span>
+                    {usernameError && <span className="text-red-500 font-normal normal-case">{usernameError}</span>}
+                  </label>
+                  <div className="relative">
+                    <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-theme-on-surface/40" />
+                    <input key='username' required name="username" type="text" placeholder="david_artisan" className="w-full bg-theme-surface-high border border-theme-outline/20 rounded-2xl py-4 pl-12 pr-12 outline-none focus:border-theme-forest transition-all text-theme-forest placeholder:text-theme-on-surface/30 shadow-sm"
+                      onChange={handleInputChange} value={formData.username}
+                    />
+                    {isLoadingUsername && (
+                      <Loader2 size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-theme-on-surface/40 animate-spin" />
+                    )}
+                    {!isLoadingUsername && isUsernameValid && formData.username && (
+                      <Check size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500" />
+                    )}
+                    {!isLoadingUsername && usernameError && formData.username && (
+                      <X size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500" />
+                    )}
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
             <div className="space-y-2">
@@ -175,7 +176,7 @@ export default function AuthView() {
               <label className="text-[10px] font-bold uppercase tracking-widest text-theme-on-surface/60">Password</label>
               <div className="relative">
                 <Key size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-theme-on-surface/40" />
-                <input required name="password" type="password" placeholder="••••••••" className="w-full bg-theme-surface-high border border-theme-outline/20 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-theme-forest transition-all text-theme-forest placeholder:text-theme-on-surface/30 shadow-sm" 
+                <input required name="password" type="password" placeholder="••••••••" className="w-full bg-theme-surface-high border border-theme-outline/20 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-theme-forest transition-all text-theme-forest placeholder:text-theme-on-surface/30 shadow-sm"
                   onChange={handleInputChange}
                 />
               </div>
@@ -189,7 +190,7 @@ export default function AuthView() {
           </form>
 
           <div className="mt-8 text-center">
-            <Button variant="link" 
+            <Button variant="link"
               onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
               className="text-xs font-bold uppercase"
             >

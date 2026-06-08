@@ -30,8 +30,16 @@ const toAuthState = (user: Awaited<ReturnType<typeof authService.getUserById>>) 
 };
 
 export async function POST(request: Request) {
+  let body;
   try {
-    const body = LoginWithPasswordRequestSchema.parse(await request.json());
+    body = LoginWithPasswordRequestSchema.parse(await request.json());
+    
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Login failed';
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+
+  try {
     const user = await authService.loginWithPassword(body);
     const token = await createAuthSession(user.id);
 
@@ -41,6 +49,6 @@ export async function POST(request: Request) {
     
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Login failed';
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ error: message }, { status: 401 });
   }
 }

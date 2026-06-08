@@ -1,3 +1,5 @@
+import { triggerLogout } from "@/lib/logout-handler";
+
 interface FetchAPIOptions {
   method?: string;
   data?: unknown;
@@ -53,6 +55,9 @@ export const fetchAPI = async (url: string, options: FetchAPIOptions = {}): Prom
     const response = await fetch(targetUrl, fetchOptions);
 
     if (!response.ok) {
+      if (response.status === 401){
+        triggerLogout();
+      }
       throw new Error(`API error: ${response.status}`);
     }
 
