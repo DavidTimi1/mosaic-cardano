@@ -1,22 +1,21 @@
 services:
 
-  neo4j:
-    image: neo4j:5.15.0
-    container_name: mosaic-neo4j
+  memgraph:
+    image: memgraph/memgraph:latest
+    container_name: mosaic-memgraph
     ports:
-      - "7474:7474"
       - "7687:7687"
-    environment:
-      - NEO4J_AUTH=${NEO4J_USERNAME}/${NEO4J_PASSWORD}
-      # which provides advanced graph algorithms for recommendations.
-      - NEO4J_apoc_export_file_enabled=true
-      - NEO4J_apoc_import_file_enabled=true
-      - NEO4J_apoc_import_file_use__neo4j__config=true
-      - NEO4J_PLUGINS=["apoc"]
+      - "7444:7444"
     volumes:
-      - neo4j_data:/data
-      - neo4j_logs:/logs
+      - memgraph_data:/var/lib/memgraph
     restart: unless-stopped
+
+  memgraph-lab:
+    image: memgraph/lab:latest
+    ports:
+      - "3003:3000"
+    depends_on:
+      - memgraph
 
   redis:
     image: redis:7-alpine
@@ -29,6 +28,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  neo4j_data:
-  neo4j_logs:
+  memgraph_data:
   redis_data:
