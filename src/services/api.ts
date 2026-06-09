@@ -58,7 +58,27 @@ export const fetchAPI = async (url: string, options: FetchAPIOptions = {}): Prom
       if (response.status === 401){
         triggerLogout();
       }
-      throw new Error(`API error: ${response.status}`);
+
+      let errorMessage = `API error: ${response.status}`;
+      
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMessage = errorData.error;
+        }
+      } catch {
+        // If JSON parsing fails, try to get text
+        try {
+          const errorText = await response.text();
+          if (errorText) {
+            errorMessage = errorText;
+          }
+        } catch {
+          // If both fail, use the original status message
+        }
+      }
+      
+      throw new Error(errorMessage);
     }
 
     // Try parsing as JSON; if empty or not JSON, return response text or null
