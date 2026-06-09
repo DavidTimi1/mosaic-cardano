@@ -60,6 +60,17 @@ export const ArtifactNodeSchema = z.object({
   updatedAt: TimestampSchema.optional(),
 });
 
+export const PostNodeSchema = z.object({
+  id: UUIDSchema,
+  communityId: UUIDSchema.optional(),
+  authorId: UUIDSchema,
+  content: z.string().min(1).max(5000),
+  score: z.number().int().default(0),
+  replyCount: z.number().int().default(0),
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema.optional(),
+});
+
 export const SkillNodeSchema = z.object({
   name: z.string().trim().toLowerCase().min(1).max(80),
   createdAt: TimestampSchema.optional(),
@@ -127,6 +138,18 @@ export const TaggedWithEdgeSchema = z.object({
   createdAt: TimestampSchema,
 });
 
+export const UpvotedEdgeSchema = z.object({
+  createdAt: TimestampSchema,
+});
+
+export const DownvotedEdgeSchema = z.object({
+  createdAt: TimestampSchema,
+});
+
+export const RepliedToEdgeSchema = z.object({
+  createdAt: TimestampSchema,
+});
+
 
 
 export type UserNode = z.infer<typeof UserNodeSchema>;
@@ -145,3 +168,7 @@ export type ContributedToEdge = z.infer<typeof ContributedToEdgeSchema>;
 export type SavedEdge = z.infer<typeof SavedEdgeSchema>;
 export type TaggedWithEdge = z.infer<typeof TaggedWithEdgeSchema>;
 export type AuthProvider = z.infer<typeof AuthProviderSchema>;
+export type PostNode = z.infer<typeof PostNodeSchema>;
+export type UpvotedEdge = z.infer<typeof UpvotedEdgeSchema>;
+export type DownvotedEdge = z.infer<typeof DownvotedEdgeSchema>;
+export type RepliedToEdge = z.infer<typeof RepliedToEdgeSchema>;
