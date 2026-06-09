@@ -32,6 +32,8 @@ export const API = {
         DETAILS: (communityId: string) => `/api/villages/${communityId}`,
         MEMBERS: (communityId: string) => `/api/villages/${communityId}/members`,
         MEMBERSHIP: (communityId: string) => `/api/villages/${communityId}/membership`,
+        SETTINGS: (communityId: string) => `/api/villages/${communityId}/settings`,
+        ACTIVITY_LOG: (communityId: string) => `/api/villages/${communityId}/activity-log`,
         MY: '/api/villages/me',
         LIST: '/api/villages',
     },
