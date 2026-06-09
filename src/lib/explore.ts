@@ -18,6 +18,7 @@ export interface NormalizedExploreItem {
   format?: string | null;
   isMember?: boolean;
   lastActivity?: string | null;
+  previewAvatars?: string[];
 }
 
 const safeToNumber = (v: unknown) => {
@@ -46,6 +47,11 @@ export const parseExploreItem = (raw: Record<string, string | number | null>): N
   const lastActivityAt = raw?.lastActivityAt || raw?.timestamp || raw?.publishedDate || raw?.createdAt || null;
   const lastActivity = lastActivityAt ? `${formatDistanceToNowStrict(new Date(lastActivityAt))} ago` : null;
 
+  let previewAvatars: string[] = [];
+  if (Array.isArray(raw?.previewAvatars)) {
+    previewAvatars = raw.previewAvatars.filter((url) => typeof url === 'string');
+  }
+
   return {
     id: String(id),
     title: String(title),
@@ -62,6 +68,7 @@ export const parseExploreItem = (raw: Record<string, string | number | null>): N
     format: format ? String(format) : undefined,
     isMember,
     lastActivity,
+    previewAvatars,
   };
 };
 

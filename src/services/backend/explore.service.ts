@@ -14,6 +14,7 @@ export type ExploreCard = {
   topic?: string | null;
   location?: string | null;
   isMember: boolean;
+  previewAvatars?: string[];
 };
 
 export type ExploreFilters = {
@@ -77,8 +78,8 @@ export const exploreService = {
       OPTIONAL MATCH (viewer)-[membership:MEMBER_OF]->(c)
       OPTIONAL MATCH (c)<-[:MEMBER_OF]-(member:User)
       ${where}
-      WITH c, count(DISTINCT member) AS memberCount, count(membership) > 0 AS isMember
-      RETURN c AS community, memberCount, isMember
+      WITH c, count(DISTINCT member) AS memberCount, count(membership) > 0 AS isMember, collect(DISTINCT member.avatarUrl)[0..3] AS previewAvatars
+      RETURN c AS community, memberCount, isMember, previewAvatars
       ORDER BY c.createdAt DESC
       SKIP toInteger($offset)
       LIMIT toInteger($pageSize)
@@ -99,6 +100,7 @@ export const exploreService = {
         topic: community.topic ?? null,
         location: community.location ?? null,
         isMember: Boolean(row.isMember),
+        previewAvatars: Array.isArray(row.previewAvatars) ? row.previewAvatars.filter(Boolean) : [],
       } as ExploreCard;
     });
 
@@ -136,6 +138,7 @@ export const exploreService = {
       topic: community.topic ?? null,
       location: community.location ?? null,
       isMember: false,
+      previewAvatars: [],
     } as ExploreCard;
   }
 };
