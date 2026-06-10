@@ -12,7 +12,6 @@ import {
   Users,
   LogOut,
   Scale,
-  LandmarkIcon,
   PiggyBankIcon,
   SquareIcon
 } from 'lucide-react';
@@ -49,7 +48,6 @@ export default function VillageSidebar({ communityId: propCommunityId }: { commu
 
   const navItems = [
     { name: 'Profile', path: ROUTES.VILLAGE.HOME(communityId), icon: SquareIcon, exact: true },
-    { name: 'Town Square', path: ROUTES.VILLAGE.TOWNSQUARE(communityId), icon: LandmarkIcon },
     { name: 'Feed', path: ROUTES.VILLAGE.FEED(communityId), icon: MessageSquare },
     { name: 'Library', path: ROUTES.VILLAGE.LIBRARY(communityId), icon: BookOpen },
     { name: 'Treasury', path: ROUTES.VILLAGE.TREASURY(communityId), icon: PiggyBankIcon },
