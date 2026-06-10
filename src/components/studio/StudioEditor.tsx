@@ -15,7 +15,8 @@ import CharacterCount from '@tiptap/extension-character-count';
 import Image from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import Typography from '@tiptap/extension-typography';
-import { useCreateArtifact, useUpdateArtifact } from '@/services/projects';
+import { useCreateArtifact, useUpdateArtifact } from '@/services/projects'; // Note: will rename hook later
+import { saveLocalDocument } from '@/lib/indexeddb';
 
 export default function StudioEditor({ 
   setPublishStep,
@@ -31,7 +32,7 @@ export default function StudioEditor({
   const isSaving = isCreating || isUpdating;
   
   const [title, setTitle] = useState('');
-  const [currentArtifactId, setCurrentArtifactId] = useState<string | null>(artifactId);
+  const [currentPieceId, setCurrentPieceId] = useState<string | null>(artifactId);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const editor = useEditor({
@@ -79,22 +80,35 @@ export default function StudioEditor({
     if (!editor) return;
     
     try {
-      if (!currentArtifactId) {
+      let savedId = currentPieceId;
+      if (!currentPieceId) {
         const newId = await createArtifact({
           projectId,
           title: title || 'Untitled Draft',
           content: editor.getHTML()
         });
-        setCurrentArtifactId(newId);
-        setLastSaved(new Date());
+        setCurrentPieceId(newId);
+        savedId = newId;
       } else {
         await updateArtifact({
           projectId,
-          artifactId: currentArtifactId,
+          artifactId: currentPieceId,
           updates: { title: title || 'Untitled Draft' }
         });
-        setLastSaved(new Date());
       }
+      
+      setLastSaved(new Date());
+
+      // Cache locally to IndexedDB
+      if (savedId) {
+        await saveLocalDocument({
+          id: savedId,
+          title: title || 'Untitled Draft',
+          contentSnippet: editor.getText().slice(0, 100),
+          lastAccessed: Date.now(),
+        });
+      }
+
     } catch (e) {
       console.error(e);
     }
@@ -144,6 +158,17 @@ export default function StudioEditor({
         
         <div className="flex items-center gap-6">
 
+          {/* Contributors UI */}
+          <div className="hidden md:flex items-center">
+            <div className="flex -space-x-2 mr-2">
+              <div className="w-6 h-6 rounded-full bg-theme-accent text-white flex items-center justify-center text-[10px] font-bold ring-2 ring-theme-surface z-20" title="David Adeleke (Author)">DA</div>
+              <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold ring-2 ring-theme-surface z-10" title="Amina Diallo (Contributor)">AD</div>
+            </div>
+            <span className="text-[10px] text-theme-on-surface/50 font-bold uppercase tracking-widest cursor-pointer hover:text-theme-accent">
+              + Invite
+            </span>
+          </div>
+
           {/* Save Status & Button */}
           <div className="flex items-center gap-3">
             {lastSaved && !isSaving && (
@@ -163,8 +188,8 @@ export default function StudioEditor({
           
           <button 
             onClick={() => setPublishStep('draft')}
-            disabled={!currentArtifactId || isSaving}
-            title={!currentArtifactId ? "Save as draft first" : "Publish to Library"}
+            disabled={!currentPieceId || isSaving}
+            title={!currentPieceId ? "Save as draft first" : "Publish to Library"}
             className="bg-theme-forest text-theme-parchment px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest cursor-pointer hover:bg-theme-forest/90 transition-transform active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Publish
