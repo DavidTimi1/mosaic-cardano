@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import {
-  ArtifactNodeSchema,
+  PieceNodeSchema,
   CommunityNodeSchema,
   NotificationNodeSchema,
   PagedResultMetaSchema,
@@ -19,12 +19,12 @@ export const OnboardingRequestSchema = z.object({
 });
 
 
-// Action: Publish Artifact
-export const PublishArtifactRequestSchema = z.object({
+// Action: Publish Piece
+export const PublishPieceRequestSchema = z.object({
   userId: UUIDSchema,
   projectId: UUIDSchema,
-  // Pick the fields needed to create an artifact, and add custom parameters
-  artifactData: ArtifactNodeSchema.pick({ title: true, contentUrl: true, contentType: true }).partial({ contentType: true }),
+  // Pick the fields needed to create a piece, and add custom parameters
+  pieceData: PieceNodeSchema.pick({ title: true, contentUrl: true, contentType: true }).partial({ contentType: true }),
 });
 
 export const FollowUserRequestSchema = z.object({
@@ -101,7 +101,7 @@ export const AuthStateResponseSchema = z.object({
 });
 
 export type OnboardingRequest = z.infer<typeof OnboardingRequestSchema>;
-export type PublishArtifactRequest = z.infer<typeof PublishArtifactRequestSchema>;
+export type PublishPieceRequest = z.infer<typeof PublishPieceRequestSchema>;
 export type FollowUserRequest = z.infer<typeof FollowUserRequestSchema>;
 export type UnfollowUserRequest = z.infer<typeof UnfollowUserRequestSchema>;
 export type JoinCommunityRequest = z.infer<typeof JoinCommunityRequestSchema>;

@@ -2,11 +2,11 @@ import { z } from 'zod';
 
 import {
 	CreateProjectRequestSchema,
-	PublishArtifactRequestSchema,
+	PublishPieceRequestSchema,
 	type CreateProjectRequest,
-	type PublishArtifactRequest,
+	type PublishPieceRequest,
 } from '@/types/api';
-import { ArtifactNodeSchema, ProjectNodeSchema, type ArtifactNode, type ProjectNode } from '@/types/schemas';
+import { PieceNodeSchema, ProjectNodeSchema, type PieceNode, type ProjectNode } from '@/types/schemas';
 import { cacheKey, invalidateCachePattern } from './cache';
 import { runWrite } from './shared';
 
@@ -59,17 +59,17 @@ export const participateService = {
 		return project;
 	},
 
-	async publishArtifact(input: PublishArtifactRequest): Promise<ArtifactNode> {
-		const parsed = PublishArtifactRequestSchema.parse(input);
+	async publishPiece(input: PublishPieceRequest): Promise<PieceNode> {
+		const parsed = PublishPieceRequestSchema.parse(input);
 		const now = Date.now();
-		const artifactId = crypto.randomUUID();
+		const pieceId = crypto.randomUUID();
 
 		const rows = await runWrite(
 			`
 				MATCH (author:User {id: $userId})
 				MATCH (project:Project {id: $projectId})
-				CREATE (artifact:Artifact {
-					id: $artifactId,
+				CREATE (piece:Piece {
+					id: $pieceId,
 					projectId: $projectId,
 					authorId: $userId,
 					title: $title,
@@ -77,29 +77,29 @@ export const participateService = {
 					contentType: $contentType,
 					createdAt: $now
 				})
-				MERGE (project)-[:CONTAINS]->(artifact)
-				MERGE (author)-[:AUTHORED {createdAt: $now}]->(artifact)
-				RETURN artifact AS artifact
+				MERGE (project)-[:CONTAINS]->(piece)
+				MERGE (author)-[:AUTHORED {createdAt: $now}]->(piece)
+				RETURN piece AS piece
 			`,
 			{
-				artifactId,
+				pieceId,
 				userId: parsed.userId,
 				projectId: parsed.projectId,
-				title: parsed.artifactData.title,
-				contentUrl: parsed.artifactData.contentUrl,
-				contentType: parsed.artifactData.contentType ?? 'OTHER',
+				title: parsed.pieceData.title,
+				contentUrl: parsed.pieceData.contentUrl,
+				contentType: parsed.pieceData.contentType ?? 'OTHER',
 				now,
 			},
-			row => ArtifactNodeSchema.parse(row.artifact),
+			row => PieceNodeSchema.parse(row.piece),
 		);
 
-		const artifact = rows[0];
+		const piece = rows[0];
 		await Promise.all([
 			invalidateCachePattern(cacheKey('community', '*')),
 			invalidateCachePattern(cacheKey('derived', 'trending', '*')),
 		]);
 
-		return artifact;
+		return piece;
 	},
 
 	async contributeToProject(userId: string, projectId: string, role: string): Promise<void> {
@@ -128,6 +128,28 @@ export const participateService = {
 			invalidateCachePattern(cacheKey('community', '*')),
 			invalidateCachePattern(cacheKey('derived', 'recommended', parsed.userId, '*')),
 		]);
+	},
+
+	async contributeToPiece(userId: string, pieceId: string, role: string): Promise<void> {
+		const parsed = ContributeInputSchema.parse({ userId, projectId: pieceId, role }); // Reusing schema for convenience
+		const now = Date.now();
+
+		await runWrite(
+			`
+				MATCH (u:User {id: $userId})
+				MATCH (p:Piece {id: $pieceId})
+				MERGE (u)-[r:CONTRIBUTED_TO]->(p)
+				ON CREATE SET r.createdAt = $now
+				SET r.role = $role
+			`,
+			{
+				userId: parsed.userId,
+				pieceId: parsed.projectId, // mapped from schema validation
+				role: parsed.role,
+				now,
+			},
+			() => {},
+		);
 	},
 };
 

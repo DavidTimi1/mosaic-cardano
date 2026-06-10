@@ -53,12 +53,23 @@ export default function ExploreCard({ item, index, clickOptions }: ExploreCardPr
             </div>
 
             <div className="flex items-center justify-between pt-3">
-              <div className="flex items-center gap-3">
-                <span className={`text-[10px] font-sans font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${item.isMember ? 'bg-theme-forest/5 text-theme-forest border-theme-forest/20' : 'bg-theme-clay/10 text-theme-accent border-theme-clay/20'}`}>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className={`shrink-0 text-[10px] font-sans font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${item.isMember ? 'bg-theme-forest/5 text-theme-forest border-theme-forest/20' : 'bg-theme-clay/10 text-theme-accent border-theme-clay/20'}`}>
                   {item.isMember ? 'Member' : 'View'}
                 </span>
-                <span className="text-[10px] font-sans text-theme-on-surface/60">{renderCardMetadata(item)}</span>
-                <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-theme-clay">Community</span>
+
+                {item.previewAvatars && item.previewAvatars.length > 0 && (
+                  <div className="flex -space-x-2 shrink-0">
+                    {item.previewAvatars.slice(0, 3).map((avatar, i) => (
+                      <div key={i} className="w-5 h-5 rounded-full border-2 border-theme-surface bg-theme-outline/20 relative overflow-hidden">
+                        <Image src={avatar} alt="Member" fill className="object-cover" unoptimized />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <span className="text-[10px] font-sans text-theme-on-surface/60 whitespace-nowrap">{renderCardMetadata(item)}</span>
+                <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-theme-clay hidden sm:block shrink-0">Community</span>
               </div>
 
               <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-theme-accent flex items-center gap-0.5 group-hover:translate-x-1 transition-transform">

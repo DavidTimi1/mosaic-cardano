@@ -1,15 +1,9 @@
-import { getAuthSessionByToken, sessionCookieName } from './session';
+import { getAuthSessionByToken, getSessionTokenFromRequest, invalidateRequestSession } from './session';
 import { NextResponse } from 'next/server';
 
 export const getRequestUserId = async (request: Request): Promise<string | null> => {
-  const cookieHeader = request.headers.get('cookie') || '';
-  const token = cookieHeader
-    .split(';')
-    .map(part => part.trim())
-    .find(part => part.startsWith(`${sessionCookieName}=`))
-    ?.split('=')[1];
-
-  const session = await getAuthSessionByToken(token ? decodeURIComponent(token) : undefined);
+  const token = getSessionTokenFromRequest(request);
+  const session = await getAuthSessionByToken(token);
   return session?.userId ?? null;
 };
 
@@ -20,7 +14,9 @@ export const withAuth = (handler: AuthenticatedApiHandler) => {
   return async (request: Request, context: ApiHandlerContext) => {
     const userId = await getRequestUserId(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      await invalidateRequestSession(request, response);
+      return response;
     }
     return handler(request, context, userId);
   };

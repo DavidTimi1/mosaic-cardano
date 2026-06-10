@@ -18,6 +18,7 @@ export interface VillageDetail {
   treasuryBalance: string;
   isMember: boolean;
   isCreator?: boolean;
+  role?: string;
   profileImageUrl?: string | null;
 }
 
@@ -30,6 +31,7 @@ export interface VillageActivity {
   type: string;
   description: string;
   createdAt: number;
+  role?: string | null;
 }
 
 export interface VillageSummary {
