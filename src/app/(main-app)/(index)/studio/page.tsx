@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FileText, Link as LinkIcon, Loader2, Clock, ArrowRight } from 'lucide-react';
-import { useCreateArtifact, useGetUserArtifacts } from '@/services/projects';
+import { useCreateArtifact, useGetUserArtifacts } from '@/services/projects'; // Note: will rename hook later
+import { getLocalDocuments, LocalDocument } from '@/lib/indexeddb';
 import AppPageContainer from '@/components/layout/AppPageContainer';
 import { ROUTES } from '@/lib/routes';
 
@@ -18,11 +19,26 @@ export default function StudioLandingPage() {
   const [showAllDocuments, setShowAllDocuments] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
 
-  const { mutateAsync: createArtifact } = useCreateArtifact();
-  const { data: artifactsData, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading: artifactsLoading } = useGetUserArtifacts();
+  const [localPieces, setLocalPieces] = useState<LocalDocument[]>([]);
+  const { mutateAsync: createPiece } = useCreateArtifact();
+  const { data: piecesData, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading: piecesLoading } = useGetUserArtifacts();
 
-  const allArtifacts = artifactsData?.pages.flatMap((page) => page.data) || [];
-  const recentArtifacts = allArtifacts.slice(0, 4);
+  const allPieces = piecesData?.pages.flatMap((page) => page.data) || [];
+
+  useEffect(() => {
+    // Load local documents
+    getLocalDocuments().then(setLocalPieces);
+  }, []);
+
+  // Merge local pieces with remote pieces, preferring local for recentness
+  const mergedPieces = [...localPieces.map(p => ({
+    id: p.id,
+    title: p.title,
+    status: 'LOCAL',
+    updatedAt: 'Just now'
+  })), ...allPieces.filter(ap => !localPieces.find(lp => lp.id === ap.id))];
+
+  const recentPieces = mergedPieces.slice(0, 4);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -52,7 +68,7 @@ export default function StudioLandingPage() {
     setIsLinking(true);
 
     try {
-      await createArtifact({
+      await createPiece({
         projectId,
         title: 'External Document',
         content: externalUrl
@@ -70,7 +86,7 @@ export default function StudioLandingPage() {
   return (
     <AppPageContainer
       title="Initialize Document" 
-      description="Will you draft a native artifact within the Mosaic Studio, or link a document already published externally?">
+      description="Will you draft a native piece within the Mosaic Studio, or link a document already published externally?">
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
         
@@ -130,7 +146,7 @@ export default function StudioLandingPage() {
           <h2 className="font-serif text-2xl font-bold text-theme-forest flex items-center gap-2">
             <Clock size={20} className="text-theme-accent" /> Recent Documents
           </h2>
-          {!showAllDocuments && allArtifacts.length > 4 && (
+          {!showAllDocuments && mergedPieces.length > 4 && (
             <button 
               onClick={() => setShowAllDocuments(true)}
               className="text-xs font-bold uppercase tracking-widest text-theme-accent hover:text-theme-forest transition-colors flex items-center gap-1 cursor-pointer"
@@ -140,23 +156,23 @@ export default function StudioLandingPage() {
           )}
         </div>
 
-        {artifactsLoading ? (
+        {piecesLoading && localPieces.length === 0 ? (
           <div className="flex justify-center py-12"><Loader2 className="animate-spin text-theme-accent" /></div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(showAllDocuments ? allArtifacts : recentArtifacts).map(artifact => (
+            {(showAllDocuments ? mergedPieces : recentPieces).map(piece => (
               <div 
-                key={artifact.id} 
-                onClick={() => router.push(`/studio/${artifact.id}?project_id=${projectId}&community_id=${communityId}`)}
+                key={piece.id} 
+                onClick={() => router.push(`/studio/${piece.id}?project_id=${projectId}&community_id=${communityId}`)}
                 className="bg-white border border-theme-outline/10 hover:border-theme-clay p-5 rounded-xl cursor-pointer transition-colors group flex items-start justify-between"
               >
                 <div>
-                  <h3 className="font-bold text-theme-forest group-hover:text-theme-accent transition-colors">{artifact.title}</h3>
+                  <h3 className="font-bold text-theme-forest group-hover:text-theme-accent transition-colors">{piece.title}</h3>
                   <p className="text-xs text-theme-on-surface/50 mt-1 flex items-center gap-2">
                     <span className="uppercase tracking-widest text-[9px] bg-theme-surface-low px-2 py-0.5 rounded text-theme-on-surface/70">
-                      {artifact.status}
+                      {piece.status}
                     </span>
-                    • {artifact.updatedAt}
+                    • {piece.updatedAt}
                   </p>
                 </div>
                 <div className="w-8 h-8 rounded bg-theme-surface flex items-center justify-center text-theme-outline/50 group-hover:bg-theme-clay/10 group-hover:text-theme-accent transition-colors">
@@ -178,7 +194,7 @@ export default function StudioLandingPage() {
           </div>
         )}
         
-        {showAllDocuments && !hasNextPage && allArtifacts.length > 0 && (
+        {showAllDocuments && !hasNextPage && mergedPieces.length > 0 && (
           <p className="text-center text-xs text-theme-on-surface/40 mt-8 uppercase tracking-widest font-bold">End of Archive</p>
         )}
       </div>
