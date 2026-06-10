@@ -12,7 +12,6 @@ import {
   Users,
   LogOut,
   Scale,
-  LandmarkIcon,
   PiggyBankIcon,
   SquareIcon
 } from 'lucide-react';
@@ -22,10 +21,10 @@ import { useGetVillageDetails } from '@/services/villages';
 import AppSidebar from '../layout/AppSidebar';
 import { ROUTES } from '@/lib/routes';
 
-export default function VillageSidebar() {
+export default function VillageSidebar({ communityId: propCommunityId }: { communityId?: string }) {
   const pathname = usePathname();
   const params = useParams();
-  const communityId = params.community_id as string;
+  const communityId = propCommunityId || (params.community_id as string);
   const { data: village, isLoaded, isError } = useGetVillageDetails(communityId);
 
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -49,7 +48,6 @@ export default function VillageSidebar() {
 
   const navItems = [
     { name: 'Profile', path: ROUTES.VILLAGE.HOME(communityId), icon: SquareIcon, exact: true },
-    { name: 'Town Square', path: ROUTES.VILLAGE.TOWNSQUARE(communityId), icon: LandmarkIcon },
     { name: 'Feed', path: ROUTES.VILLAGE.FEED(communityId), icon: MessageSquare },
     { name: 'Library', path: ROUTES.VILLAGE.LIBRARY(communityId), icon: BookOpen },
     { name: 'Treasury', path: ROUTES.VILLAGE.TREASURY(communityId), icon: PiggyBankIcon },

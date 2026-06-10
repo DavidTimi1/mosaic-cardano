@@ -49,13 +49,24 @@ export const ProjectNodeSchema = z.object({
   updatedAt: TimestampSchema.optional(),
 });
 
-export const ArtifactNodeSchema = z.object({
+export const PieceNodeSchema = z.object({
   id: UUIDSchema,
   projectId: UUIDSchema,
   authorId: UUIDSchema,
   title: z.string().min(1),
   contentUrl: z.string().url(),
   contentType: z.enum(['TEXT', 'AUDIO', 'IMAGE', 'VIDEO', 'CODE', 'OTHER']).default('OTHER'),
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema.optional(),
+});
+
+export const PostNodeSchema = z.object({
+  id: UUIDSchema,
+  communityId: UUIDSchema.optional(),
+  authorId: UUIDSchema,
+  content: z.string().min(1).max(5000),
+  score: z.number().int().default(0),
+  replyCount: z.number().int().default(0),
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema.optional(),
 });
@@ -127,12 +138,24 @@ export const TaggedWithEdgeSchema = z.object({
   createdAt: TimestampSchema,
 });
 
+export const UpvotedEdgeSchema = z.object({
+  createdAt: TimestampSchema,
+});
+
+export const DownvotedEdgeSchema = z.object({
+  createdAt: TimestampSchema,
+});
+
+export const RepliedToEdgeSchema = z.object({
+  createdAt: TimestampSchema,
+});
+
 
 
 export type UserNode = z.infer<typeof UserNodeSchema>;
 export type CommunityNode = z.infer<typeof CommunityNodeSchema>;
 export type ProjectNode = z.infer<typeof ProjectNodeSchema>;
-export type ArtifactNode = z.infer<typeof ArtifactNodeSchema>;
+export type PieceNode = z.infer<typeof PieceNodeSchema>;
 export type SkillNode = z.infer<typeof SkillNodeSchema>;
 export type TopicNode = z.infer<typeof TopicNodeSchema>;
 export type NotificationNode = z.infer<typeof NotificationNodeSchema>;
@@ -145,3 +168,7 @@ export type ContributedToEdge = z.infer<typeof ContributedToEdgeSchema>;
 export type SavedEdge = z.infer<typeof SavedEdgeSchema>;
 export type TaggedWithEdge = z.infer<typeof TaggedWithEdgeSchema>;
 export type AuthProvider = z.infer<typeof AuthProviderSchema>;
+export type PostNode = z.infer<typeof PostNodeSchema>;
+export type UpvotedEdge = z.infer<typeof UpvotedEdgeSchema>;
+export type DownvotedEdge = z.infer<typeof DownvotedEdgeSchema>;
+export type RepliedToEdge = z.infer<typeof RepliedToEdgeSchema>;

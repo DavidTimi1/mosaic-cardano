@@ -32,10 +32,16 @@ export const API = {
         DETAILS: (communityId: string) => `/api/villages/${communityId}`,
         MEMBERS: (communityId: string) => `/api/villages/${communityId}/members`,
         MEMBERSHIP: (communityId: string) => `/api/villages/${communityId}/membership`,
+        POSTS: (communityId: string) => `/api/villages/${communityId}/posts`,
         MY: '/api/villages/me',
         LIST: '/api/villages',
     },
     EXPLORE: {
         LIST: '/api/explore',
     },
+    POSTS: {
+        DETAILS: (postId: string) => `/api/posts/${postId}`,
+        VOTE: (postId: string) => `/api/posts/${postId}/vote`,
+        REPLIES: (postId: string) => `/api/posts/${postId}/replies`,
+    }
 } as const;
