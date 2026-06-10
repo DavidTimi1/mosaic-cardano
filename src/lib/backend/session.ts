@@ -1,4 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from 'crypto';
+import { NextResponse } from 'next/server';
 
 import redis from './redis';
 
@@ -82,3 +83,28 @@ export const destroyAuthSessionByToken = async (token: string | undefined): Prom
 export const sessionCookieName = SESSION_COOKIE_NAME;
 export const sessionCookieValue = encodeSessionToken;
 export type { SessionPayload };
+
+export const getSessionTokenFromRequest = (request: Request): string | undefined => {
+  const cookieHeader = request.headers.get('cookie') || '';
+  const prefix = `${sessionCookieName}=`;
+  const cookiePart = cookieHeader
+    .split(';')
+    .map(part => part.trim())
+    .find(part => part.startsWith(prefix));
+  if (!cookiePart) return undefined;
+  const token = cookiePart.substring(prefix.length);
+  return token ? decodeURIComponent(token) : undefined;
+};
+
+export const invalidateRequestSession = async (request: Request, response: NextResponse): Promise<void> => {
+  const token = getSessionTokenFromRequest(request);
+  if (token) {
+    await destroyAuthSessionByToken(token);
+  }
+  response.cookies.set(sessionCookieName, '', {
+    ...authCookieOptions,
+    maxAge: 0,
+    expires: new Date(0),
+  });
+};
+

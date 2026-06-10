@@ -1,9 +1,9 @@
 "use client";
 
 import { useGetAuthState, useLogout } from "@/services/auth";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-
+import { registerLogout } from "@/lib/logout-handler";
 
 const AuthContext = createContext<{
     userId: string | null;
@@ -22,15 +22,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const userId = authState?.user?.id || null;
     const logoutMutation = useLogout();
 
-    const logout = async (isForced = false) => {
-        await logoutMutation.mutateAsync();
+    const logout = useCallback(async (isForced = false) => {
+        try {
+            await logoutMutation.mutateAsync();
+        } catch (err) {
+            console.error("Failed to call logout API", err);
+        }
 
         if (isForced) {
             toast.info("Your session has expired, please log back in to continue");
         } else {
             toast.success("You have been logged out successfully");
         }
-    };
+    }, [logoutMutation]);
+
+    useEffect(() => {
+        registerLogout(logout);
+    }, [logout]);
 
     return (
         <AuthContext.Provider value={{ userId, isLoaded, logout, refetchAuthState: refetch }}>
