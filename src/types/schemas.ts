@@ -49,7 +49,7 @@ export const ProjectNodeSchema = z.object({
   updatedAt: TimestampSchema.optional(),
 });
 
-export const ArtifactNodeSchema = z.object({
+export const PieceNodeSchema = z.object({
   id: UUIDSchema,
   projectId: UUIDSchema,
   authorId: UUIDSchema,
@@ -155,7 +155,7 @@ export const RepliedToEdgeSchema = z.object({
 export type UserNode = z.infer<typeof UserNodeSchema>;
 export type CommunityNode = z.infer<typeof CommunityNodeSchema>;
 export type ProjectNode = z.infer<typeof ProjectNodeSchema>;
-export type ArtifactNode = z.infer<typeof ArtifactNodeSchema>;
+export type PieceNode = z.infer<typeof PieceNodeSchema>;
 export type SkillNode = z.infer<typeof SkillNodeSchema>;
 export type TopicNode = z.infer<typeof TopicNodeSchema>;
 export type NotificationNode = z.infer<typeof NotificationNodeSchema>;
