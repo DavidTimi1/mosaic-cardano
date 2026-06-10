@@ -17,6 +17,7 @@ export interface VillageDetail {
   memberCount: number;
   treasuryBalance: string;
   isMember: boolean;
+  role?: string | null;
 }
 
 export interface VillageSummary {
