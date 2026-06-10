@@ -11,11 +11,11 @@ export const GET = withAuth(async (req, { params }) => {
       return NextResponse.json({ error: 'Community not found' }, { status: 404 });
     }
 
-    const members = await villageService.listCommunityMembers(details.id);
+    const activity = await villageService.getVillageActivityLog(details.id);
 
-    return NextResponse.json(members);
+    return NextResponse.json(activity);
   } catch (error) {
-    console.error('Failed to fetch members:', error);
+    console.error('Failed to fetch activity log:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 });

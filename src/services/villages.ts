@@ -17,6 +17,20 @@ export interface VillageDetail {
   memberCount: number;
   treasuryBalance: string;
   isMember: boolean;
+  isCreator?: boolean;
+  role?: string;
+  profileImageUrl?: string | null;
+}
+
+export interface VillageSettings extends VillageDetail {
+  isPublic?: boolean;
+}
+
+export interface VillageActivity {
+  id: string;
+  type: string;
+  description: string;
+  createdAt: number;
   role?: string | null;
 }
 
@@ -82,7 +96,34 @@ export const useGetVillageDetails = (id: string) => {
   return useXQuery<VillageDetail | null>({
     queryKey: ['villageDetails', id],
     queryFn: async () => {
-      return fetchAPI(`/api/villages/${id}`) as Promise<VillageDetail | null>;
+      return fetchAPI(API.VILLAGE.DETAILS(id)) as Promise<VillageDetail | null>;
+    }
+  });
+};
+
+export const useGetVillageSettings = (id: string) => {
+  return useXQuery<VillageSettings | null>({
+    queryKey: ['villageSettings', id],
+    queryFn: async () => {
+      return fetchAPI(API.VILLAGE.SETTINGS(id)) as Promise<VillageSettings | null>;
+    }
+  });
+};
+
+export const useUpdateVillageSettings = (communityId: string) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: { description?: string; logoUrl?: string; isPublic?: boolean }) => {
+      return fetchAPI(API.VILLAGE.SETTINGS(communityId), {
+        method: 'PATCH',
+        data: data,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['villageSettings', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['villageDetails', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['villageActivityLog', communityId] });
     }
   });
 };
@@ -195,7 +236,16 @@ export const useGetVillageMembers = (villageId: string) => {
   return useXQuery<VillageMember[]>({
     queryKey: ['villageMembers', villageId],
     queryFn: async () => {
-      return fetchAPI(`/api/villages/${villageId}/members`) as Promise<VillageMember[]>;
+      return fetchAPI(API.VILLAGE.MEMBERS(villageId)) as Promise<VillageMember[]>;
+    }
+  });
+};
+
+export const useGetVillageActivityLog = (villageId: string) => {
+  return useXQuery<VillageActivity[]>({
+    queryKey: ['villageActivityLog', villageId],
+    queryFn: async () => {
+      return fetchAPI(API.VILLAGE.ACTIVITY_LOG(villageId)) as Promise<VillageActivity[]>;
     }
   });
 };

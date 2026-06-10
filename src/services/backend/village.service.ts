@@ -59,7 +59,7 @@ export const villageService = {
 		return rows[0];
 	},
 
-	async checkCommunityMembership(userId: string, communityId: string): Promise<{ isMember: boolean; role: string | null }> {
+	async checkCommunityMembership(userId: string, communityId: string): Promise<{ isMember: boolean; role: string | null; isCreator: boolean }> {
 		const parsedUserId = z.string().uuid().parse(userId);
 		const parsedCommunityId = z.string().uuid().parse(communityId);
 
@@ -73,13 +73,17 @@ export const villageService = {
 				userId: parsedUserId,
 				communityId: parsedCommunityId,
 			},
-			row => ({
-				isMember: Boolean(row.isMember),
-				role: (row.role as string | null) ?? null,
-			}),
+			row => {
+				const role = (row.role as string | null) ?? null;
+				return {
+					isMember: Boolean(row.isMember),
+					role,
+					isCreator: role === 'ADMIN',
+				};
+			},
 		);
 
-		return rows[0] ?? { isMember: false, role: null };
+		return rows[0] ?? { isMember: false, role: null, isCreator: false };
 	},
 
 	async joinCommunity(input: z.infer<typeof JoinCommunityRequestSchema>): Promise<void> {
@@ -152,6 +156,66 @@ export const villageService = {
 				return rows[0] ?? null;
 			},
 			120,
+		);
+	},
+
+	async updateVillageSettings(userId: string, communityId: string, input: { description?: string; profileImageUrl?: string; isPublic?: boolean }): Promise<void> {
+		const parsedUserId = z.string().uuid().parse(userId);
+		const parsedCommunityId = z.string().uuid().parse(communityId);
+		const now = Date.now();
+
+		await runWrite(
+			`
+				MATCH (u:User {id: $userId})-[m:MEMBER_OF]->(c:Community {id: $communityId})
+				WHERE m.role = 'ADMIN'
+				
+				SET 
+					c.description = coalesce($description, c.description),
+					c.profileImageUrl = coalesce($profileImageUrl, c.profileImageUrl),
+					c.isPublic = coalesce($isPublic, c.isPublic)
+					
+				CREATE (c)-[:HAS_ACTIVITY]->(a:CommunityActivity {
+					id: randomUUID(),
+					type: 'SETTINGS_UPDATED',
+					description: 'Community settings were updated by admin.',
+					createdAt: $now
+				})
+			`,
+			{
+				userId: parsedUserId,
+				communityId: parsedCommunityId,
+				description: input.description ?? null,
+				profileImageUrl: input.profileImageUrl ?? null,
+				isPublic: input.isPublic ?? null,
+				now,
+			},
+			() => {} // Empty mapRow since we don't need a return value
+		);
+
+		await invalidateCachePattern(cacheKey('community', parsedCommunityId, '*'));
+		// Also invalidate slug-based details just in case
+		await invalidateCachePattern(cacheKey('community', '*', 'details'));
+	},
+
+	async getVillageActivityLog(communityId: string, limit = 20) {
+		const parsedCommunityId = z.string().uuid().parse(communityId);
+		const key = cacheKey('community', parsedCommunityId, 'activity', limit);
+
+		return cacheAside(
+			key,
+			async () => {
+				return runRead(
+					`
+						MATCH (c:Community {id: $communityId})-[:HAS_ACTIVITY]->(a:CommunityActivity)
+						RETURN a AS activity
+						ORDER BY a.createdAt DESC
+						LIMIT toInteger($limit)
+					`,
+					{ communityId: parsedCommunityId, limit },
+					row => row.activity as { id: string; type: string; description: string; createdAt: number },
+				);
+			},
+			30,
 		);
 	},
 

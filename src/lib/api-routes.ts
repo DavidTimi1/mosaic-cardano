@@ -33,6 +33,8 @@ export const API = {
         MEMBERS: (communityId: string) => `/api/villages/${communityId}/members`,
         MEMBERSHIP: (communityId: string) => `/api/villages/${communityId}/membership`,
         POSTS: (communityId: string) => `/api/villages/${communityId}/posts`,
+        SETTINGS: (communityId: string) => `/api/villages/${communityId}/settings`,
+        ACTIVITY_LOG: (communityId: string) => `/api/villages/${communityId}/activity-log`,
         MY: '/api/villages/me',
         LIST: '/api/villages',
     },

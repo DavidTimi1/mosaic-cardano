@@ -33,9 +33,11 @@ export const CommunityNodeSchema = z.object({
   id: UUIDSchema,
   slug: z.string().min(2).max(80),
   name: z.string().min(2).max(120),
-  description: z.string().max(500).optional(),
+  description: z.string().max(500).optional().nullable(),
+  profileImageUrl: z.string().url().optional().nullable(),
+  isPublic: z.boolean().default(true),
   createdAt: TimestampSchema,
-  updatedAt: TimestampSchema.optional(),
+  updatedAt: TimestampSchema.optional().nullable(),
 });
 
 export const ProjectNodeSchema = z.object({
