@@ -36,7 +36,7 @@ export default function PostPage() {
 
   return (
     <VillageLayout communityId={communityId}>
-      <div className="max-w-3xl mx-auto py-8 px-4 w-full">
+      <div className="mx-auto py-8 px-6 w-full">
         <Link 
           href={ROUTES.VILLAGE.FEED(communityId)} 
           className="inline-flex items-center gap-2 text-sm font-bold text-theme-on-surface/50 hover:text-theme-accent transition-colors mb-6"
