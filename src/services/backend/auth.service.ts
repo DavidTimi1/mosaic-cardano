@@ -101,7 +101,7 @@ export const authService = {
 		const rows = await runWrite(
 			`
 
-				MERGE (cred:Credential {email: $email})
+				MERGE (cred:Mosaic_Credential {email: $email})
 				ON CREATE SET
 					cred.id = $credentialId,
 					cred.userId = $userId,
@@ -148,7 +148,7 @@ export const authService = {
 
 		const rows = await runRead(
 			`
-				MATCH (u:Mosaic_User)-[:HAS_CREDENTIAL]->(cred:Credential {email: $email, provider: 'LOCAL'})
+				MATCH (u:Mosaic_User)-[:HAS_CREDENTIAL]->(cred:Mosaic_Credential {email: $email, provider: 'LOCAL'})
 				RETURN u AS user, cred.passwordHash AS passwordHash
 				LIMIT 1
 			`,
@@ -174,7 +174,7 @@ export const authService = {
 		await clearAttemptCounters(email, parsed.ipAddress);
 		await runWrite(
 			`
-				MATCH (:Mosaic_User {id: $userId})-[:HAS_CREDENTIAL]->(cred:Credential {email: $email})
+				MATCH (:Mosaic_User {id: $userId})-[:HAS_CREDENTIAL]->(cred:Mosaic_Credential {email: $email})
 				SET cred.lastLoginAt = $now, cred.updatedAt = $now
 				RETURN cred.id AS credentialId
 			`,

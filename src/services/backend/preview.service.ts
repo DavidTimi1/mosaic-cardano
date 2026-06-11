@@ -49,7 +49,7 @@ export const previewService = {
         } else {
           // Fallback to Artifact label if the DB hasn't migrated yet
           const legacyRows = await runRead(
-            `MATCH (p:Artifact {id: $id}) RETURN p`,
+            `MATCH (p:Mosaic_Artifact {id: $id}) RETURN p`,
             { id },
             (row: Record<string, unknown>) => row['p'] as { title: string; contentType?: string }
           );
