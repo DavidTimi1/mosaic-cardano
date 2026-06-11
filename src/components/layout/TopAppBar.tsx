@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode } from 'react';
 import { BellIcon, PlusIcon, User, Palette, Award, LogOut, User2Icon } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -14,14 +14,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import CreateProjectModal from '../project/CreateProjectModal';
+import { useModals } from '@/contexts/modals-context';
+import { MODALS } from '@/lib/modals';
+import { useAuth } from '@/contexts/auth-context';
 
 function TopAppBar() {
   const { data: authState } = useGetAuthState();
+  const { logout: handleLogout } = useAuth();
   const isAuthenticated = authState?.isAuthenticated;
   const user = authState?.user;
 
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { openModal } = useModals();
+
+  const handleLogoutClicked = () => {
+    handleLogout();
+  }
 
   return (
     <>
@@ -46,7 +53,7 @@ function TopAppBar() {
               <DropdownMenuItem>
                 Create a Collaboration
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsCreateModalOpen(true)}>
+              <DropdownMenuItem onClick={() => openModal(MODALS.CREATE_PROJECT)}>
                 Create a new Project
               </DropdownMenuItem>
               <DropdownMenuItem>
@@ -102,7 +109,7 @@ function TopAppBar() {
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem className="cursor-pointer font-sans text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 py-2.5 rounded-lg">
+                <DropdownMenuItem onClick={handleLogoutClicked} className="cursor-pointer font-sans text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 py-2.5 rounded-lg">
                   <div className="flex items-center gap-3 w-full">
                     <LogOut size={16} className="text-red-500" />
                     <span>Logout</span>
@@ -122,12 +129,6 @@ function TopAppBar() {
         </div>
       </div>
     </header>
-
-      
-      <CreateProjectModal
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)}
-      />
     </>
   );
 }

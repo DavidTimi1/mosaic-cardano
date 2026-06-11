@@ -12,7 +12,6 @@ import {
   Users,
   LogOut,
   Scale,
-  LandmarkIcon,
   PiggyBankIcon,
   SquareIcon
 } from 'lucide-react';
@@ -22,11 +21,11 @@ import { useGetVillageDetails } from '@/services/villages';
 import AppSidebar from '../layout/AppSidebar';
 import { ROUTES } from '@/lib/routes';
 
-export default function VillageSidebar() {
+export default function VillageSidebar({ communityId: propCommunityId }: { communityId?: string }) {
   const pathname = usePathname();
   const params = useParams();
-  const communityId = params.community_id as string;
-  const { data: village, isLoaded } = useGetVillageDetails(communityId);
+  const communityId = propCommunityId || (params.community_id as string);
+  const { data: village, isLoaded, isError } = useGetVillageDetails(communityId);
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -49,7 +48,6 @@ export default function VillageSidebar() {
 
   const navItems = [
     { name: 'Profile', path: ROUTES.VILLAGE.HOME(communityId), icon: SquareIcon, exact: true },
-    { name: 'Town Square', path: ROUTES.VILLAGE.TOWNSQUARE(communityId), icon: LandmarkIcon },
     { name: 'Feed', path: ROUTES.VILLAGE.FEED(communityId), icon: MessageSquare },
     { name: 'Library', path: ROUTES.VILLAGE.LIBRARY(communityId), icon: BookOpen },
     { name: 'Treasury', path: ROUTES.VILLAGE.TREASURY(communityId), icon: PiggyBankIcon },
@@ -57,7 +55,7 @@ export default function VillageSidebar() {
     { name: 'Members', path: ROUTES.VILLAGE.MEMBERS(communityId), icon: Users },
   ];
 
-  if (isLoaded && !village?.isMember) {
+  if (isError || (isLoaded && !village?.isMember)) {
     return <AppSidebar />
   }
 
@@ -68,7 +66,7 @@ export default function VillageSidebar() {
         isCollapsed ? "w-20 px-2" : "w-64 px-4"
       )}
     >
-      <div className={cn("mb-10 flex items-center justify-between", isCollapsed ? "px-2 justify-center" : "px-4")}>
+      <div className={cn("mb-10 flex items-center justify-between", isCollapsed ? "justify-center" : "")}>
         {!isCollapsed && (
           <div className='flex items-center gap-3 overflow-hidden'>
             <div className="w-8 h-8 rounded bg-theme-clay shrink-0 flex items-center justify-center font-serif text-white font-bold">

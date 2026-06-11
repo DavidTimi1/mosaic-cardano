@@ -7,6 +7,6 @@ import { useGetAuthState } from '@/services/auth';
 export default function ProfilePage() {
   const {data } = useGetAuthState();
   return <AuthGuard>
-    <ProfilePageContent username={String(data?.user?.id)} />
+    <ProfilePageContent username={String(data?.user?.username)} />
   </AuthGuard>
 }

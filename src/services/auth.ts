@@ -50,19 +50,66 @@ export const useLogout = () => {
   });
 }
 
+export interface UsernameCheckResult {
+  available: boolean;
+  error?: Error;
+  isLoading: boolean;
+  isLoaded: boolean;
+}
+
+export const useUsernameCheck = (username: string, enabled: boolean) => {
+  const isTooShort = username && username.length < 3;
+  const isInvalidFormat = username && !/^[a-zA-Z0-9_]+$/.test(username);
+  
+  const query = useXQuery({
+    queryKey: ['usernameCheck', username],
+    queryFn: () => usernameCheck(username),
+    enabled: !!(enabled && username && !isTooShort && !isInvalidFormat),
+  });
+
+  if (!enabled || !username) {
+    return {
+      available: true,
+      error: undefined,
+      isLoading: false,
+      isLoaded: true
+    }
+  }
+
+  if (isTooShort) {
+    return {
+      available: false,
+      error: Error("Username must be at least 3 characters"),
+      isLoading: false,
+      isLoaded: true
+    }
+  }
+  if (isInvalidFormat) {
+    return {
+      available: false,
+      error: Error("Letters, numbers, and underscores only"),
+      isLoading: false,
+      isLoaded: true
+    }
+  }
+
+  return {
+    error: query.error,
+    isLoaded: query.isLoaded,
+    isLoading: query.isLoading,
+    available: query.data?.available,
+  }
+}
+
+const usernameCheck = async (username: string) => {
+  const res = await fetchAPI(API.AUTH.USERNAME_CHECK(username))
+  return res as { available: boolean };
+}
+
 export const useGetVillageMembership = (communityId: string) => {
   return useXQuery({
     queryKey: ['villageMembership', communityId],
-    queryFn: async () => {
-      // TODO: Replace with actual API call to check if user is a member of the specific village
-      // const res = await fetch(`/api/villages/${communityId}/membership`);
-      // return res.json();
-
-      return {
-        isMember: false, // Hardcoded to false for now
-        role: null,
-      };
-    }
+    queryFn: async () => fetchAPI(API.VILLAGE.MEMBERSHIP(communityId)) as Promise<{ isMember: boolean; role: string | null }>
   });
 };
 
@@ -72,7 +119,7 @@ const getAuthState = async () => {
   return AuthStateResponseSchema.parse(res) satisfies AuthStateResponse;
 };
 
-const login = async ({email, password}: { email: string; password: string }) => {
+const login = async ({ email, password }: { email: string; password: string }) => {
   const res = await fetchAPI(API.AUTH.LOGIN, {
     method: 'POST',
     data: { email, password },
