@@ -1,0 +1,5 @@
+export const MODALS = {
+  CREATE_PROJECT: 'CREATE_PROJECT',
+} as const;
+
+export type ModalId = typeof MODALS[keyof typeof MODALS];

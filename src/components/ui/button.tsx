@@ -20,12 +20,12 @@ const buttonVariants = cva(
         linkAccent: "text-amber-600 hover:text-amber-700"
       },
       size: {
-        default: "px-10 py-3 rounded-2xl text-lg",
-        sm: "px-3 py-1 rounded-lg text-sm",
-        lg: "px-12 py-5 rounded-lg text-lg",
-        xl: "px-12 py-6 rounded-xl text-xl",
+        default: "h-10 px-5 rounded-xl text-sm",
+        sm: "h-8 px-4 rounded-lg text-xs",
+        lg: "h-12 px-8 rounded-xl text-base",
+        xl: "h-14 px-10 rounded-2xl text-lg",
         card: "p-8 rounded-[2rem]",
-        icon: "h-10 w-10 rounded-lg",
+        icon: "h-10 w-10 rounded-xl",
         none: "",
       },
     },

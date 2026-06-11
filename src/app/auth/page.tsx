@@ -1,3 +1,4 @@
+import { AuthGuard } from '@/contexts/auth-guard';
 import { Metadata } from 'next';
 import AuthView from '../../components/AuthView';
 
@@ -7,5 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default function AuthPage() {
-  return <AuthView />;
+  return <AuthGuard>
+    <AuthView />
+  </AuthGuard>
 }

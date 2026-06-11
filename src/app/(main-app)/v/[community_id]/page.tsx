@@ -16,6 +16,8 @@ import {
   useGetVillageMembers 
 } from '@/services/villages';
 import { ROUTES } from '@/lib/routes';
+import NotFound from '@/components/layout/NotFound';
+import { PageError } from '@/components/ui/PageError';
 
 export default function CommunityPublicProfile() {
   const params = useParams();
@@ -30,7 +32,7 @@ export default function CommunityPublicProfile() {
   const { data: focusedItem, isLoading: isLoadingFocusedItem } = useGetExploreItem(focusId);
 
   // Load village profile data using React Query hooks
-  const { data: villageDetails, isLoading: isLoadingDetails } = useGetVillageDetails(communityId);
+  const { data: villageDetails, isError: isVillageError, is404Error: isVillage404Error, error:villageError, isLoading: isLoadingDetails } = useGetVillageDetails(communityId);
   const { data: featuredWorks, isLoading: isLoadingWorks } = useGetVillageFeaturedWorks(communityId);
   const { data: treasuryAllocations, isLoading: isLoadingTreasury } = useGetVillageTreasuryAllocations(communityId);
   const { data: members, isLoading: isLoadingMembers } = useGetVillageMembers(communityId);
@@ -40,6 +42,14 @@ export default function CommunityPublicProfile() {
     router.push(pathname);
   };
 
+
+  if (isVillage404Error) {
+    return <NotFound />;
+  }
+
+  if (isVillageError) {
+    return <PageError title="Error Loading Village" description="Failed to load village." errorMessage={villageError?.message} />;
+  }
 
 
   return (
@@ -69,9 +79,11 @@ export default function CommunityPublicProfile() {
             </>
           )}
           <div className="pt-8 flex items-center justify-center gap-6">
-            <button className="bg-theme-forest text-theme-parchment px-8 py-4 rounded-lg font-bold uppercase tracking-widest text-sm hover:opacity-90 transition-all shadow-xl hover:-translate-y-1 cursor-pointer">
-              Apply to Join
-            </button>
+            {!villageDetails?.isMember && (
+              <button className="bg-theme-forest text-theme-parchment px-8 py-4 rounded-lg font-bold uppercase tracking-widest text-sm hover:opacity-90 transition-all shadow-xl hover:-translate-y-1 cursor-pointer">
+                Join
+              </button>
+            )}
 
             <Link href={ROUTES.STUDIO} className="text-theme-accent font-bold uppercase tracking-widest text-sm hover:underline underline-offset-4 transition-all">
               View Open Works
@@ -110,35 +122,41 @@ export default function CommunityPublicProfile() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {featuredWorks?.map((work) => (
-                  <div key={work.id} className="border border-theme-outline/30 p-6 rounded-xl hover:border-theme-clay/50 transition-all hover:shadow-xl hover:-translate-y-1 group flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 bg-theme-forest rounded-full"></span>
-                          <span className="text-[10px] uppercase tracking-widest font-sans font-bold">Featured</span>
-                        </div>
-                        <span className="font-sans text-[10px] text-theme-on-surface/70 bg-theme-surface-low px-2 py-1 rounded border border-theme-outline/20">
-                          {work.tags[0]}
-                        </span>
-                      </div>
-
-                      <h4 className="font-serif text-xl mb-3 group-hover:text-theme-clay transition-colors">{work.title}</h4>
-                      <p className="font-sans text-sm leading-relaxed text-theme-on-surface/80 mb-6 line-clamp-3">{work.desc}</p>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-auto">
-                      <div className="flex -space-x-2">
-                        <div className="w-6 h-6 rounded-full border border-theme-surface-low bg-blue-100 flex items-center justify-center text-[8px] font-bold text-blue-700">1</div>
-                        <div className="w-6 h-6 rounded-full border border-theme-surface-low bg-green-100 flex items-center justify-center text-[8px] font-bold text-green-700">2</div>
-                        <div className="w-6 h-6 rounded-full border border-theme-surface-low bg-amber-100 flex items-center justify-center text-[8px] font-bold text-amber-700">3</div>
-                        <div className="w-6 h-6 rounded-full border border-theme-surface-low bg-theme-outline/30 flex items-center justify-center text-[8px] font-bold text-theme-on-surface/70">
-                          +{work.contributors - 3}
-                        </div>
-                      </div>
-                    </div>
+                {featuredWorks?.length === 0 ? (
+                  <div className="col-span-1 sm:col-span-2 flex items-center justify-center py-12 border border-dashed border-theme-outline/20 rounded-xl text-theme-on-surface/50 text-sm italic">
+                    No featured works have been archived yet.
                   </div>
-                ))}
+                ) : (
+                  featuredWorks?.map((work) => (
+                    <div key={work.id} className="border border-theme-outline/30 p-6 rounded-xl hover:border-theme-clay/50 transition-all hover:shadow-xl hover:-translate-y-1 group flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-theme-forest rounded-full"></span>
+                            <span className="text-[10px] uppercase tracking-widest font-sans font-bold">Featured</span>
+                          </div>
+                          <span className="font-sans text-[10px] text-theme-on-surface/70 bg-theme-surface-low px-2 py-1 rounded border border-theme-outline/20">
+                            {work.tags[0]}
+                          </span>
+                        </div>
+
+                        <h4 className="font-serif text-xl mb-3 group-hover:text-theme-clay transition-colors">{work.title}</h4>
+                        <p className="font-sans text-sm leading-relaxed text-theme-on-surface/80 mb-6 line-clamp-3">{work.desc}</p>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-auto">
+                        <div className="flex -space-x-2">
+                          <div className="w-6 h-6 rounded-full border border-theme-surface-low bg-blue-100 flex items-center justify-center text-[8px] font-bold text-blue-700">1</div>
+                          <div className="w-6 h-6 rounded-full border border-theme-surface-low bg-green-100 flex items-center justify-center text-[8px] font-bold text-green-700">2</div>
+                          <div className="w-6 h-6 rounded-full border border-theme-surface-low bg-amber-100 flex items-center justify-center text-[8px] font-bold text-amber-700">3</div>
+                          <div className="w-6 h-6 rounded-full border border-theme-surface-low bg-theme-outline/30 flex items-center justify-center text-[8px] font-bold text-theme-on-surface/70">
+                            +{work.contributors - 3}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -162,12 +180,16 @@ export default function CommunityPublicProfile() {
                 <div>
                   <p className="text-sm text-theme-on-surface/60 mb-3">Recent Allocations</p>
                   <div className="space-y-2 text-sm font-mono">
-                    {treasuryAllocations?.recentAllocations.map((alloc, i) => (
-                      <div key={i} className="flex justify-between">
-                        <span>{alloc.label}</span>
-                        <span className="text-theme-clay">{alloc.amount}</span>
-                      </div>
-                    ))}
+                    {treasuryAllocations?.recentAllocations?.length === 0 ? (
+                      <div className="text-theme-on-surface/50 text-xs py-2 text-center border border-dashed border-theme-outline/20 rounded-lg">No recent allocations.</div>
+                    ) : (
+                      treasuryAllocations?.recentAllocations?.map((alloc: { label: string; amount: string }, i: number) => (
+                        <div key={i} className="flex justify-between">
+                          <span>{alloc.label}</span>
+                          <span className="text-theme-clay">{alloc.amount}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -186,18 +208,24 @@ export default function CommunityPublicProfile() {
           ) : (
             <div>
               <h3 className="font-sans text-xs uppercase tracking-widest text-theme-accent mb-6 font-bold">
-                Stewards & Members ({villageDetails?.memberCount || 142})
+                Stewards & Members ({villageDetails?.memberCount || 0})
               </h3>
               <div className="flex flex-wrap gap-2">
-                {members?.slice(0, 12).map((member, i) => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-theme-outline/20 border-2 border-theme-surface flex items-center justify-center text-xs font-bold text-theme-forest/50">
-                    {i + 1}
-                  </div>
-                ))}
-                {(members?.length || 0) > 12 && (
-                  <div className="w-10 h-10 rounded-full bg-theme-surface-high border-2 border-theme-outline/20 flex items-center justify-center text-xs font-bold text-theme-forest">
-                    +{members!.length - 12}
-                  </div>
+                {members?.length === 0 ? (
+                   <span className="text-xs text-theme-on-surface/50 italic">No members found.</span>
+                ) : (
+                  <>
+                    {members?.slice(0, 12).map((member: { displayName?: string }, i: number) => (
+                      <div key={i} className="w-10 h-10 rounded-full bg-theme-outline/20 border-2 border-theme-surface flex items-center justify-center text-xs font-bold text-theme-forest/50" title={member.displayName}>
+                        {member.displayName?.charAt(0).toUpperCase() || (i + 1)}
+                      </div>
+                    ))}
+                    {(members?.length || 0) > 12 && (
+                      <div className="w-10 h-10 rounded-full bg-theme-surface-high border-2 border-theme-outline/20 flex items-center justify-center text-xs font-bold text-theme-forest">
+                        +{members!.length - 12}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -283,11 +311,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Partner Guilds</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.partners?.join(' and ')}</p>
+                          <p className="font-medium text-theme-forest">{String((focusedItem.details?.partners as string[] | undefined)?.join(' and ') ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Timeline</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.duration}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.duration ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -296,11 +324,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Author</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.author}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.author ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Date Published</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.publishedDate}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.publishedDate ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -309,11 +337,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Member Count</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.membersCount} active contributors</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.membersCount ?? '')} active contributors</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Established</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.activeSince}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.activeSince ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -322,11 +350,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Stewards Needed</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.rolesNeeded?.join(', ')}</p>
+                          <p className="font-medium text-theme-forest">{String((focusedItem.details?.rolesNeeded as string[] | undefined)?.join(', ') ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Application Deadline</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.deadline}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.deadline ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -335,11 +363,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Stipend Allocation</p>
-                          <p className="font-medium text-theme-forest font-mono">{focusedItem.details.stipend}</p>
+                          <p className="font-medium text-theme-forest font-mono">{String(focusedItem.details?.stipend ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Program Duration</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.duration}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.duration ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -348,11 +376,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Curator / Steward</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.curator}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.curator ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Archived Materials</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.totalArtifacts} records</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.totalArtifacts ?? '')} records</p>
                         </div>
                       </div>
                     )}
@@ -361,11 +389,11 @@ export default function CommunityPublicProfile() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Funding Disbursed</p>
-                          <p className="font-medium text-theme-forest font-mono">{focusedItem.details.fundingAmount}</p>
+                          <p className="font-medium text-theme-forest font-mono">{String(focusedItem.details?.fundingAmount ?? '')}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Consensus Date</p>
-                          <p className="font-medium text-theme-forest">{focusedItem.details.dateApproved}</p>
+                          <p className="font-medium text-theme-forest">{String(focusedItem.details?.dateApproved ?? '')}</p>
                         </div>
                       </div>
                     )}
@@ -373,11 +401,11 @@ export default function CommunityPublicProfile() {
                     <div className="grid grid-cols-2 gap-4 pt-2">
                       <div>
                         <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Visibility Level</p>
-                        <p className="font-medium text-theme-forest">{focusedItem.visibility}</p>
+                        <p className="font-medium text-theme-forest">{String(focusedItem.visibility ?? '')}</p>
                       </div>
                       <div>
                         <p className="text-[11px] text-theme-on-surface/60 uppercase tracking-wider">Format</p>
-                        <p className="font-medium text-theme-forest">{focusedItem.format}</p>
+                        <p className="font-medium text-theme-forest">{String(focusedItem.format ?? '')}</p>
                       </div>
                     </div>
                   </div>

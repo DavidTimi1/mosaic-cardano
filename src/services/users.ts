@@ -1,30 +1,5 @@
 import { useXQuery } from "@/lib/extended-react-query";
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
-const MOCK_USER_PROFILE = {
-  id: 'david-artisan',
-  displayName: 'David Artisan',
-  handle: '@davidartisan',
-  bio: 'Digital archivist and open-source weaver. Dedicated to preserving collective memory through immutable infrastructure.',
-  joinedDate: 'December 2022',
-  isVerified: true,
-  walletAddress: 'addr1q9...', // Simplified
-};
-
-export interface PublishedWork {
-  id: string;
-  title: string;
-  type: string;
-  community: string;
-  date: string;
-}
-
-const MOCK_PUBLISHED_WORKS = [
-  { id: '1', title: 'On the Ethics of Archives', type: 'Essay', community: 'Neo-Classical Agora', date: 'Oct 2023' },
-  { id: '2', title: 'Protocol Governance Draft v2', type: 'Technical', community: 'Syntactic Weavers', date: 'Aug 2023' },
-];
-
 export interface UserProfile {
   id: string;
   displayName: string;
@@ -43,12 +18,6 @@ export interface PublishedWork {
   date: string;
 }
 
-const MOCK_CONTRIBUTIONS = [
-  { id: '1', action: 'Drafted Artifact', target: 'Protocol Governance Draft v2', community: 'Syntactic Weavers', date: 'Aug 14, 2023', description: 'Proposed a mechanism for quadratic voting within the treasury.' },
-  { id: '2', action: 'Merged Pull Request', target: 'Core Client UI', community: 'Syntactic Weavers', date: 'Jul 02, 2023', description: 'Implemented the new textured card component across the landing page.' },
-  { id: '3', action: 'Peer Review', target: 'The Griot\'s Echo', community: 'Scribes of the Sahel', date: 'May 20, 2023', description: 'Reviewed translated stanzas 40-55 for historical accuracy.' },
-];
-
 export interface Contribution {
   id: string;
   action: string;
@@ -56,6 +25,12 @@ export interface Contribution {
   community: string;
   date: string;
   description: string;
+}
+
+export interface UserRep {
+  id: string;
+  name: string;
+  icon: string;
 }
 
 export interface Reputation {
@@ -76,65 +51,58 @@ export interface Reputation {
   }[];
 }
 
-export interface UserRep {
-  id: string;
-  name: string;
-  icon: string;
-}
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchAPI } from './api';
 
-const MOCK_REPUTATION = {
-  badges: [
-    { id: 'b1', name: 'Founding Weaver', icon: '⚡' },
-    { id: 'b2', name: 'Verified Scholar', icon: '📜' },
-    { id: 'b3', name: 'Treasury Signer', icon: '🏛️' },
-  ],
-  skills: ['React', 'Cryptography', 'Technical Writing', 'Governance Design'],
-  communities: [
-    { id: 'syntactic-weavers', name: 'Syntactic Weavers', role: 'Core Contributor' },
-    { id: 'neo-classical-agora', name: 'Neo-Classical Agora', role: 'Member' },
-  ],
-  projects: ['Mosaic Core', 'Decentralized Identity Spec'],
-  supportHistory: [
-    { id: 's1', type: 'Received', amount: '5,000 ADA', source: 'Project Catalyst', reason: 'Open Source Development' },
-  ]
-};
-
-export const useGetUserProfile = (userId: string) => {
-  return useXQuery({
-    queryKey: ['userProfile', userId],
+export const useGetUserProfile = (username: string) => {
+  return useXQuery<UserProfile>({
+    queryKey: ['userProfile', username],
     queryFn: async () => {
-      await delay(500);
-      return MOCK_USER_PROFILE; // In real life, fetch by userId
+      return fetchAPI(`/api/users/${username}`) as Promise<UserProfile>;
     }
   });
 };
 
-export const useGetUserPublishedWorks = (userId: string) => {
-  return useXQuery({
-    queryKey: ['userWorks', userId],
+export const useGetUserPublishedWorks = (username: string) => {
+  return useXQuery<PublishedWork[]>({
+    queryKey: ['userWorks', username],
     queryFn: async () => {
-      await delay(600);
-      return MOCK_PUBLISHED_WORKS;
+      return fetchAPI(`/api/users/${username}/works`) as Promise<PublishedWork[]>;
     }
   });
 };
 
-export const useGetUserContributions = (userId: string) => {
-  return useXQuery({
-    queryKey: ['userContributions', userId],
+export const useGetUserContributions = (username: string) => {
+  return useXQuery<Contribution[]>({
+    queryKey: ['userContributions', username],
     queryFn: async () => {
-      await delay(700);
-      return MOCK_CONTRIBUTIONS;
+      return fetchAPI(`/api/users/${username}/contributions`) as Promise<Contribution[]>;
     }
   });
 };
 
-export const useGetUserReputation = (userId: string) => {
-  return useXQuery({
-    queryKey: ['userReputation', userId],
+export const useGetUserReputation = (username: string) => {
+  return useXQuery<Reputation>({
+    queryKey: ['userReputation', username],
     queryFn: async () => {
-      await delay(650);
-      return MOCK_REPUTATION;
+      return fetchAPI(`/api/users/${username}/reputation`) as Promise<Reputation>;
+    }
+  });
+};
+
+export const useUpdateUserProfile = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: { displayName?: string; bio?: string }) => {
+      return fetchAPI('/api/users/me', {
+        method: 'PATCH',
+        data: data,
+      });
+    },
+    onSuccess: () => {
+      // Invalidate queries so UI updates
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
     }
   });
 };
