@@ -8,9 +8,42 @@ import NextTopLoader from "nextjs-toploader";
 
 const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
 
-export const metadata = {
-  title: 'mosaic',
-  description: 'Mosaic Cardano - Modular Next.js App'
+import type { Metadata } from 'next';
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
+  
+  title: {
+    default: 'Mosaic',
+    template: '%s | Mosaic',
+  },
+  description: 'A village platform for creative communities of any shared interest, passion, or hobby. Create together. Show up together. Earn together.',
+  keywords: ['communities', 'creators', 'cardano', 'web3', 'village', 'collaboration', 'funding'],
+  authors: [{ name: 'Dev_id', url: 'https://github.com/davidtimi1' }],
+  openGraph: {
+    title: 'Mosaic',
+    description: 'A village platform for creative communities of any shared interest, passion, or hobby. Create together. Show up together. Earn together.',
+    url: siteUrl,
+    siteName: 'Mosaic',
+    images: [
+      {
+        url: '/banner-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Mosaic - Every community. Every passion. One home.',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Mosaic',
+    description: 'A village platform for creative communities of any shared interest, passion, or hobby. Create together. Show up together. Earn together.',
+    images: ['/banner-image.png'],
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
