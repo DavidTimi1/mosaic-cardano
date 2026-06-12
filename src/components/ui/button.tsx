@@ -15,6 +15,7 @@ const buttonVariants = cva(
         secondary: "bg-black/5 hover:bg-black/10 text-[#111827]",
         outline: "border border-theme-forest hover:bg-theme-forest hover:text-theme-parchment text-[#111827]",
         cardActive: "bg-[#4338CA] text-white border border-[#4338CA] shadow-xl scale-105",
+        destructive: "bg-red-600 text-white hover:bg-red-700 hover:scale-105 active:scale-95 disabled:opacity-50",
         ghost: "hover:bg-black/5 text-theme-forest",
         link: "tracking-widest text-theme-accent hover:text-theme-forest transition-colors underline-offset-4 hover:underline",
         linkAccent: "text-amber-600 hover:text-amber-700"

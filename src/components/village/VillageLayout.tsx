@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import VillageSidebar from './VillageSidebar';
 import { cn } from '@/lib/utils';
-import { TopAppBarWrapper } from '../layout/TopAppBar';
+import VillageTopAppBar from './VillageTopAppBar';
 
 export default function VillageLayout({ children, communityId }: { children: React.ReactNode, communityId?: string }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -36,9 +36,9 @@ export default function VillageLayout({ children, communityId }: { children: Rea
           "flex-1 flex flex-col transition-all duration-300 overflow-y-auto w-full",
           (isCollapsed ? "ml-20" : "ml-64")
         )}>
-          <TopAppBarWrapper>
+          <VillageTopAppBar>
             {children}
-          </TopAppBarWrapper>
+          </VillageTopAppBar>
         </main>
       </div>
     </div>
