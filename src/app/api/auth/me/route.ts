@@ -25,6 +25,7 @@ const toAuthState = (user: Awaited<ReturnType<typeof authService.getUserById>>) 
         .join('')
         .slice(0, 3),
       isOnboarded: user.isOnboarded,
+      planType: user.planType,
       avatarUrl: null,
     },
   };

@@ -96,6 +96,7 @@ export const AuthStateResponseSchema = z.object({
       initials: z.string().min(1).max(3),
       avatarUrl: z.string().url().nullable(),
       isOnboarded: z.boolean().default(false),
+      planType: z.string().default('FREE'),
     })
     .nullable(),
 });

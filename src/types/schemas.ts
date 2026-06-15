@@ -24,6 +24,7 @@ export const UserNodeSchema = z.object({
   walletAddress: z.string().optional(),
   isVerified: z.boolean().default(false),
   isOnboarded: z.boolean().default(false),
+  planType: z.enum(['FREE', 'BASIC', 'PRO', 'CUSTOM']).default('FREE'),
   settings: z.string().optional(),
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema.optional(),
