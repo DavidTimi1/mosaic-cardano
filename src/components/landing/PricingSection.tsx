@@ -1,11 +1,20 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, Variants } from 'framer-motion';
-import { Check, HashIcon, Info } from 'lucide-react';
+import { Check, HashIcon, Info, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { TexturedCard } from '../ui/textured-card';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/lib/routes';
+import { useGetAuthState } from '@/services/auth';
+import { useWallet } from '@meshsdk/react';
+import { IInitiator, Transaction } from '@meshsdk/core';
+import { AppIntent, INTENT_KEY } from '@/lib/intents';
+import { toast } from 'sonner';
+import { fetchAdaPrice, useVerifyPayment } from '@/services/payments';
+
+
+const TREASURY_ADDRESS = process.env.NEXT_PUBLIC_TREASURY_ADDRESS;
 
 const pricingVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -29,6 +38,7 @@ interface PricingCardProps {
   patternId: 1 | 2 | 3 | 4 | 5;
   patternColor: string;
   onClick?: () => void;
+  isLoading?: boolean;
 }
 
 const PricingCard = ({
@@ -44,6 +54,7 @@ const PricingCard = ({
   patternId,
   patternColor,
   onClick,
+  isLoading
 }: PricingCardProps) => {
   return (
     <motion.div variants={pricingVariants} className={`h-full relative ${isEmphasized ? 'z-10' : ''}`}>
@@ -109,18 +120,70 @@ const PricingCard = ({
 
         <Button
           onClick={onClick}
+          disabled={isLoading}
           variant={isEmphasized ? "default" : "outline"}
           className="w-full uppercase tracking-widest font-bold text-xs py-6 shadow-xl hover:shadow-theme-accent/20"
         >
-          {buttonText}
+          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : buttonText}
         </Button>
       </TexturedCard>
     </motion.div>
   );
 };
 
-export const PricingSection = ({ containerVariants }: { containerVariants: Variants }) => {
+export const PricingSection = ({ containerVariants, isModal = false }: { containerVariants: Variants, isModal?: boolean }) => {
   const router = useRouter();
+  const { data: authState, refetch } = useGetAuthState();
+  const { connected, wallet } = useWallet();
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
+  const verifyPayment = useVerifyPayment();
+
+  const handlePlanClick = async (planType: string, usdPrice: number) => {
+    if (!authState?.isAuthenticated) {
+      localStorage.setItem(INTENT_KEY, AppIntent.PRICING_VIEW);
+      router.push(ROUTES.AUTH);
+      return;
+    }
+
+    if (!TREASURY_ADDRESS){
+      toast.error("A critical error occured, please contact support. CODE: TR_ADRR");
+      return 
+    }
+
+    if (!connected) {
+      toast.error('Please connect your Cardano wallet in Account Settings first.');
+      return;
+    }
+
+    try {
+      setProcessingPlan(planType);
+      const adaPrice = await fetchAdaPrice();
+      const adaAmount = usdPrice / adaPrice;
+      const lovelaceAmount = Math.ceil(adaAmount * 1_000_000).toString();
+
+      toast.loading(`Processing payment of ~${adaAmount.toFixed(2)} ADA...`, { id: 'payment' });
+
+      const tx = new Transaction({ initiator: wallet as unknown as IInitiator });
+      tx.sendLovelace(TREASURY_ADDRESS, lovelaceAmount);
+      
+      const unsignedTx = await tx.build();
+      const signedTx = await wallet.signTx(unsignedTx, false);
+      const txHash = await wallet.submitTx(signedTx);
+
+      toast.loading('Confirming transaction...', { id: 'payment' });
+
+      await verifyPayment.mutateAsync({ txHash, planType });
+
+      toast.success('Plan upgraded successfully!', { id: 'payment' });
+      await refetch();
+      
+    } catch (error) {
+      console.error(error);
+      toast.error((error as Error).message || 'Payment failed or was cancelled.', { id: 'payment' });
+    } finally {
+      setProcessingPlan(null);
+    }
+  };
 
   return (
     <motion.section
@@ -128,21 +191,21 @@ export const PricingSection = ({ containerVariants }: { containerVariants: Varia
       whileInView="visible"
       viewport={{ once: true, margin: "-100px" }}
       variants={containerVariants}
-      className="py-32 px-6 relative z-10 w-full flex flex-col items-center"
+      className={`relative z-10 w-full flex flex-col items-center ${isModal ? 'py-16 px-4 bg-transparent' : 'py-32 px-6'}`}
     >
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-theme-accent/5 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+      {!isModal && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-theme-accent/5 rounded-full blur-[100px] -z-10 pointer-events-none"></div>}
 
-      <div className="text-center mb-20">
+      <div className="text-center mb-16">
         <motion.div variants={pricingVariants} className="inline-flex items-center gap-2 bg-theme-accent/10 text-theme-accent px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
           <HashIcon size={14} /> Now In Beta
         </motion.div>
-        <motion.h2 variants={pricingVariants} className="font-serif text-5xl md:text-6xl text-theme-forest mb-6">Sustain Your Village</motion.h2>
+        <motion.h2 variants={pricingVariants} className={`font-serif text-theme-forest mb-6 ${isModal ? 'text-4xl md:text-5xl' : 'text-5xl md:text-6xl'}`}>Sustain Your Village</motion.h2>
         <motion.p variants={pricingVariants} className="font-sans text-lg text-theme-on-surface/70 max-w-2xl mx-auto">
           Start your community with our exclusive beta rates. Prices are displayed in USD but will be paid in their ADA equivalent.
         </motion.p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-7xl">
+      <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-7xl`}>
         <PricingCard
           title="Basic"
           description="Perfect for testing the waters with your community."
@@ -155,10 +218,11 @@ export const PricingSection = ({ containerVariants }: { containerVariants: Varia
             'Standard Piece Storage',
             'Basic Governance Tools'
           ]}
-          buttonText="Get Started"
+          buttonText={authState?.isAuthenticated ? "Pay with ADA" : "Get Started"}
           patternId={1}
           patternColor="text-theme-clay"
-          onClick={() => router.push(ROUTES.AUTH)}
+          isLoading={processingPlan === 'BASIC'}
+          onClick={() => handlePlanClick('BASIC', 8)}
         />
 
         <PricingCard
@@ -174,12 +238,13 @@ export const PricingSection = ({ containerVariants }: { containerVariants: Varia
             'Advanced Governance Tools',
             'Custom Theming'
           ]}
-          buttonText="Upgrade to Pro"
+          buttonText={authState?.isAuthenticated ? "Pay with ADA" : "Upgrade to Pro"}
           isEmphasized
           popular
           patternId={2}
           patternColor="text-theme-accent"
-          onClick={() => router.push(ROUTES.AUTH)}
+          isLoading={processingPlan === 'PRO'}
+          onClick={() => handlePlanClick('PRO', 60)}
         />
 
         <PricingCard
