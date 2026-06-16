@@ -1,5 +1,7 @@
 packages: []
 allowBuilds:
   argon2: true
+  chacha-native: true
   msw: true
+  protobufjs: true
   unrs-resolver: true
