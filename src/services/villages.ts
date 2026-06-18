@@ -8,8 +8,9 @@ import {
 } from '@/data/mock';
 import { useXQuery } from '@/lib/extended-react-query';
 import { fetchAPI } from './api';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { PostResponse } from '@/services/backend/post.service';
+import { useAuth } from '@/contexts/auth-context';
 
 export interface VillageDetail {
   id: string;
@@ -60,8 +61,28 @@ export interface VillageTreasury {
 export interface VillageMember {
   id: string;
   displayName: string;
+  username?: string;
   role?: string;
+  avatarUrl?: string | null;
 }
+
+export const useRemoveVillageMembers = (communityId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (memberIds: string[]) => {
+      return fetchAPI(`/api/villages/${communityId}/members`, {
+        method: 'DELETE',
+        data: { memberIds },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['villageMembers', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['villageDetails', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['villageActivityLog', communityId] });
+    }
+  });
+};
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -113,7 +134,7 @@ export const useGetVillageSettings = (id: string) => {
 
 export const useUpdateVillageSettings = (communityId: string) => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (data: { description?: string; logoUrl?: string; isPublic?: boolean }) => {
       return fetchAPI(API.VILLAGE.SETTINGS(communityId), {
@@ -190,7 +211,7 @@ export const useGetMyVillages = (enabled = true) => {
 
 export const useCreateVillage = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (data: { name: string; description: string; tags: string[] }) => {
       return fetchAPI('/api/villages', {
@@ -251,38 +272,49 @@ export const useGetVillageActivityLog = (villageId: string) => {
   });
 };
 
-
 export const useShareInvite = (communityId: string) => {
-  const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
-  const [error, setError] = useState('');
-  const isError = !!error;
+  const { userId } = useAuth();
 
-  const shareInvite = async () => {
-    if (isGeneratingInvite) return;
-    setIsGeneratingInvite(true);
-    setError('');
-
-    try {
+  const query = useXQuery({
+    queryKey: ['invite-hash', userId],
+    queryFn: async () => {
       const res = await fetchAPI(API.INVITES.CREATE, {
         method: 'POST',
         data: { communityId },
       }) as { hash: string };
 
-      const inviteUrl = `${window.location.origin}/invite/${res.hash}?villageId=${communityId}`;
-      await navigator.clipboard.writeText(inviteUrl);
+      return res.hash;
+    },
+    enabled: !!userId,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
 
-      return inviteUrl;
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setIsGeneratingInvite(false);
-    }
+  const inviteUrl = query.data ? `${window.location.origin}/invite/${query.data}?villageId=${communityId}` : null;
+
+  const copyInvite = async () => {
+    if (!inviteUrl) return;
+
+    await navigator.clipboard.writeText(inviteUrl);
+    return inviteUrl;
   };
 
   return {
-    shareInvite,
-    isGeneratingInvite,
-    error,
-    isError
-  }
+    inviteUrl,
+    copyInvite,
+    isGeneratingInvite: query.isLoading,
+    error: query.error,
+    isError: query.isError,
+  };
+};
+
+export const useGetVillageLibrary = (communityId: string, filter: string) => {
+  return useInfiniteQuery({
+    queryKey: ['villageLibrary', communityId, filter],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam = 0 }) => {
+      return fetchAPI(`/api/villages/${communityId}/library?filter=${filter}&offset=${pageParam}&limit=20`) as Promise<{ items: PostResponse[], nextOffset: number | null }>;
+    },
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
+  });
 };

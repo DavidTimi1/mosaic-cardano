@@ -8,6 +8,7 @@ import DescriptionEditor from './DescriptionEditor';
 import PrivacySettings from './PrivacySettings';
 import MemberManagement from './MemberManagement';
 import ActivityLog from './ActivityLog';
+import AppPageContainer from '@/components/layout/AppPageContainer';
 
 interface Props {
   communityId: string;
@@ -32,11 +33,7 @@ export default function VillageSettingsView({ communityId }: Props) {
   const isCreator = settings.isCreator ?? false;
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-theme-surface">
-      <div className="max-w-4xl w-full mx-auto p-6 md:p-8 space-y-8">
-        
-        <header>
-          <h1 className="text-3xl font-display font-bold text-theme-on-surface mb-2">Village Settings</h1>
+    <AppPageContainer title="Settings" description="Manage your village settings">
           <div className="flex items-start gap-3 p-4 rounded-xl bg-theme-surface-raised border border-theme-accent/20 text-theme-accent">
             <ShieldAlert className="w-6 h-6 shrink-0 mt-0.5" />
             <p className="text-sm font-sans">
@@ -44,7 +41,6 @@ export default function VillageSettingsView({ communityId }: Props) {
               As the village matures, governance and settings control will transition into decentralized, community-driven voting.
             </p>
           </div>
-        </header>
 
         <div className="flex gap-4 border-b border-theme-outline/20">
           <button
@@ -90,7 +86,6 @@ export default function VillageSettingsView({ communityId }: Props) {
             <ActivityLog communityId={communityId} />
           )}
         </div>
-      </div>
-    </div>
+    </AppPageContainer>
   );
 }

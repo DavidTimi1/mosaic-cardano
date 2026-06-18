@@ -219,6 +219,47 @@ export const villageService = {
 		);
 	},
 
+	async removeCommunityMembers(adminId: string, communityId: string, memberIds: string[]): Promise<void> {
+		const parsedAdminId = z.string().uuid().parse(adminId);
+		const parsedCommunityId = z.string().uuid().parse(communityId);
+		const parsedMemberIds = memberIds.map(id => z.string().uuid().parse(id));
+		const now = Date.now();
+
+		await runWrite(
+			`
+				MATCH (admin:Mosaic_User {id: $adminId})-[adminMember:MEMBER_OF]->(c:Mosaic_Community {id: $communityId})
+				WHERE adminMember.role = 'ADMIN'
+				WITH c, admin
+
+				MATCH (u:Mosaic_User)-[m:MEMBER_OF]->(c)
+				WHERE u.id IN $memberIds AND u.id <> $adminId
+				
+				CREATE (u)-[r:WAS_REMOVED {
+					removedAt: $now,
+					removedBy: $adminId,
+					joinedAt: m.joinedAt
+				}]->(c)
+				DELETE m
+				
+				CREATE (c)-[:HAS_ACTIVITY]->(a:CommunityActivity {
+					id: randomUUID(),
+					type: 'MEMBERS_REMOVED',
+					description: 'Admin removed ' + size($memberIds) + ' members.',
+					createdAt: $now
+				})
+			`,
+			{
+				adminId: parsedAdminId,
+				communityId: parsedCommunityId,
+				memberIds: parsedMemberIds,
+				now
+			},
+			() => {}
+		);
+
+		await invalidateCachePattern(cacheKey('community', parsedCommunityId, '*'));
+	},
+
 	async listCommunityMembers(idOrSlug: string, limit = 50): Promise<UserNode[]> {
 		const key = cacheKey('community', idOrSlug, 'members', limit);
 
