@@ -1,5 +1,5 @@
 import { OnboardingRequestSchema, type OnboardingRequest } from '@/types/api';
-import { UserNodeSchema, type UserNode } from '@/types/schemas';
+import { type UserNode } from '@/types/schemas';
 import { authService } from './auth.service';
 import { invalidateCacheKey, invalidateCachePattern, cacheKey } from './cache';
 import { runWrite } from './shared';
@@ -16,9 +16,10 @@ export const onboardingService = {
 		const skills = normalizeTags(parsed.skills);
 		const topics = normalizeTags(parsed.topics);
 
-		const rows = await runWrite(
+		await runWrite(
 			`
 				MATCH (u:Mosaic_User {id: $userId})
+				SET u.isOnboarded = true, u.updatedAt = $now
 				WITH u
 				UNWIND $skills AS skillName
 				MERGE (s:Mosaic_Skill {name: skillName})
@@ -30,28 +31,35 @@ export const onboardingService = {
 				MERGE (t:Mosaic_Topic {name: topicName})
 				ON CREATE SET t.createdAt = $now
 				MERGE (u)-[:INTERESTED_IN {createdAt: $now}]->(t)
-
-				WITH u
-				UNWIND $communityIds AS communityId
-				MATCH (c:Mosaic_Community {id: communityId})
-				MERGE (u)-[m:MEMBER_OF]->(c)
-				ON CREATE SET m.role = 'MEMBER', m.joinedAt = $now
-
-				WITH u
-				SET u.isOnboarded = true, u.updatedAt = $now
-				RETURN u AS user
 			`,
 			{
 				userId: parsed.userId,
 				skills,
 				topics,
-				communityIds: parsed.communities,
 				now,
 			},
-			row => UserNodeSchema.parse(row.user),
+			() => null
 		);
 
-		const user = rows[0] ?? (await authService.getUserById(parsed.userId));
+		if (parsed.communities && parsed.communities.length > 0) {
+			await runWrite(
+				`
+					MATCH (u:Mosaic_User {id: $userId})
+					UNWIND $communityIds AS communityId
+					MATCH (c:Mosaic_Community {id: communityId})
+					MERGE (u)-[m:MEMBER_OF]->(c)
+					ON CREATE SET m.role = 'MEMBER', m.joinedAt = $now
+				`,
+				{
+					userId: parsed.userId,
+					communityIds: parsed.communities,
+					now,
+				},
+				() => null
+			);
+		}
+
+		const user = await authService.getUserById(parsed.userId);
 		if (!user) {
 			throw new Error('User not found while completing onboarding');
 		}
