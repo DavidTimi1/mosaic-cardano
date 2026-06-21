@@ -1,4 +1,5 @@
 "use client";
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -12,8 +13,13 @@ import { PhilosophySection } from './landing/PhilosophySection';
 import { CommunityShowcaseSection } from './landing/CommunityShowcaseSection';
 import { LivingLibrarySection } from './landing/LivingLibrarySection';
 import { TrustSection } from './landing/TrustSection';
-import { PricingSection } from './landing/PricingSection';
 import { CTASection } from './landing/CTASection';
+import dynamic from 'next/dynamic';
+
+const PricingSection = dynamic(
+  () => import('./landing/PricingSection').then(mod => ({ default: mod.PricingSection })),
+  { ssr: false }
+);
 
 export default function LandingView() {
   const containerVariants = {

@@ -1,20 +1,14 @@
 "use client";
-import React, { useState } from 'react';
+
+import React from 'react';
 import { motion, Variants } from 'framer-motion';
 import { Check, HashIcon, Info, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { TexturedCard } from '../ui/textured-card';
-import { useRouter } from 'next/navigation';
-import { ROUTES } from '@/lib/routes';
 import { useGetAuthState } from '@/services/auth';
+import { useExecutePlanPayment } from '@/lib/blockchain';
+
 import { useWallet } from '@meshsdk/react';
-import { IInitiator, Transaction } from '@meshsdk/core';
-import { AppIntent, INTENT_KEY } from '@/lib/intents';
-import { toast } from 'sonner';
-import { fetchAdaPrice, useVerifyPayment } from '@/services/payments';
-
-
-const TREASURY_ADDRESS = process.env.NEXT_PUBLIC_TREASURY_ADDRESS;
 
 const pricingVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -56,6 +50,7 @@ const PricingCard = ({
   onClick,
   isLoading
 }: PricingCardProps) => {
+
   return (
     <motion.div variants={pricingVariants} className={`h-full relative ${isEmphasized ? 'z-10' : ''}`}>
       {isEmphasized && (
@@ -132,57 +127,12 @@ const PricingCard = ({
 };
 
 export const PricingSection = ({ containerVariants, isModal = false }: { containerVariants: Variants, isModal?: boolean }) => {
-  const router = useRouter();
-  const { data: authState, refetch } = useGetAuthState();
+  const { data: authState } = useGetAuthState();
+  const { processingPlan, executePlanPayment } = useExecutePlanPayment();
   const { connected, wallet } = useWallet();
-  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
-  const verifyPayment = useVerifyPayment();
 
   const handlePlanClick = async (planType: string, usdPrice: number) => {
-    if (!authState?.isAuthenticated) {
-      localStorage.setItem(INTENT_KEY, AppIntent.PRICING_VIEW);
-      router.push(ROUTES.AUTH);
-      return;
-    }
-
-    if (!TREASURY_ADDRESS){
-      toast.error("A critical error occured, please contact support. CODE: TR_ADRR");
-      return 
-    }
-
-    if (!connected) {
-      toast.error('Please connect your Cardano wallet in Account Settings first.');
-      return;
-    }
-
-    try {
-      setProcessingPlan(planType);
-      const adaPrice = await fetchAdaPrice();
-      const adaAmount = usdPrice / adaPrice;
-      const lovelaceAmount = Math.ceil(adaAmount * 1_000_000).toString();
-
-      toast.loading(`Processing payment of ~${adaAmount.toFixed(2)} ADA...`, { id: 'payment' });
-
-      const tx = new Transaction({ initiator: wallet as unknown as IInitiator });
-      tx.sendLovelace(TREASURY_ADDRESS, lovelaceAmount);
-      
-      const unsignedTx = await tx.build();
-      const signedTx = await wallet.signTx(unsignedTx, false);
-      const txHash = await wallet.submitTx(signedTx);
-
-      toast.loading('Confirming transaction...', { id: 'payment' });
-
-      await verifyPayment.mutateAsync({ txHash, planType });
-
-      toast.success('Plan upgraded successfully!', { id: 'payment' });
-      await refetch();
-      
-    } catch (error) {
-      console.error(error);
-      toast.error((error as Error).message || 'Payment failed or was cancelled.', { id: 'payment' });
-    } finally {
-      setProcessingPlan(null);
-    }
+    executePlanPayment(planType, usdPrice, connected, wallet);
   };
 
   return (

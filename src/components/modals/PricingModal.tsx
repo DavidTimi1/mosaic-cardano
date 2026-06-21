@@ -1,6 +1,11 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { PricingSection } from '../landing/PricingSection';
+import dynamic from 'next/dynamic';
+
+const PricingSection = dynamic(
+  () => import('@/components/landing/PricingSection').then(mod => ({ default: mod.PricingSection })),
+  { ssr: false }
+);
 
 interface PricingModalProps {
   isOpen: boolean;

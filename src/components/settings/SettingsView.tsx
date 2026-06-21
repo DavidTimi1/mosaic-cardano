@@ -5,11 +5,18 @@ import SettingsSidebar, { SettingsTab } from './SettingsSidebar';
 import { useGetSettings } from '@/services/settings';
 import { StatePanel } from '../ui/StatePanel';
 
-import AccountTab from './tabs/AccountTab';
 import ProfileTab from './tabs/ProfileTab';
 import PrivacyTab from './tabs/PrivacyTab';
 import FeedTab from './tabs/FeedTab';
 import NotificationsTab from './tabs/NotificationsTab';
+import dynamic from 'next/dynamic';
+
+const AccountTab = dynamic(
+  () => import('@/components/settings/tabs/AccountTab').then(mod => mod.default),
+  { ssr: false, loading: () => <div className="text-center py-10">Loading Account Tab...</div> }
+);
+
+
 
 export default function SettingsView({ initialTab }: { initialTab?: SettingsTab }) {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab || 'account');
