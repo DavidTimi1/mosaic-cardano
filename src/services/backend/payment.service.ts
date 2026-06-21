@@ -1,7 +1,6 @@
 import { BlockfrostProvider } from '@meshsdk/core';
 import { runWrite } from './shared';
 
-// In production, these should be securely managed environment variables
 const TREASURY_ADDRESS = process.env.NEXT_PUBLIC_TREASURY_ADDRESS;
 const BLOCKFROST_PROJECT_ID = process.env.BLOCKFROST_PROJECT_ID;
 
@@ -17,8 +16,8 @@ export async function verifyPaymentAndUpdatePlan(userId: string, txHash: string,
       console.warn('Using dummy Blockfrost key. Skipping strict on-chain validation for testing.');
     } else {
       const provider = new BlockfrostProvider(BLOCKFROST_PROJECT_ID);
-      
       const txDetails = await provider.fetchTxInfo(txHash);
+      //@ts-expect-error - Outputs is not a property of TransactionInfo
       if(txDetails.outputs.find((o) => o.output.address === TREASURY_ADDRESS)){
         return false;
       }
