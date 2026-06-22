@@ -21,12 +21,16 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Verify payment and update plan
-    const success = await verifyPaymentAndUpdatePlan(userId, txHash, planType);
-
-    if (success) {
-      return NextResponse.json({ success: true, message: 'Plan upgraded successfully' });
-    } else {
-      return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 });
+    try {
+      const success = await verifyPaymentAndUpdatePlan(userId, txHash, planType);
+      if (success) {
+        return NextResponse.json({ success: true, message: 'Plan upgraded successfully' });
+      } else {
+        return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 });
+      }
+    } catch (verifyError: unknown) {
+      const errorMsg = verifyError instanceof Error ? verifyError.message : 'Payment verification failed';
+      return NextResponse.json({ error: errorMsg }, { status: 400 });
     }
 
   } catch (error) {

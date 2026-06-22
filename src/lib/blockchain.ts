@@ -45,6 +45,16 @@ export const useExecutePlanPayment = () => {
 
             toast.loading(`Processing payment of ~${adaAmount.toFixed(2)} ADA...`, { id: 'payment' });
 
+            //@ts-expect-error - Mesh wallet
+            const networkId = await wallet.getNetworkId();
+            const isLive = process.env.NEXT_PUBLIC_IS_LIVE === 'true';
+            const expectedNetworkId = isLive ? 1 : 0;
+            const expectedNetworkName = isLive ? 'Mainnet' : 'Preprod Testnet';
+
+            if (networkId !== expectedNetworkId) {
+                throw new Error(`Invalid network. Please switch your wallet to ${expectedNetworkName}.`);
+            }
+
             const tx = new Transaction({ initiator: wallet as unknown as IInitiator });
             tx.sendLovelace(TREASURY_ADDRESS, lovelaceAmount);
 

@@ -1,40 +1,88 @@
 import { BlockfrostProvider } from '@meshsdk/core';
-import { runWrite } from './shared';
+import { runWrite, runRead } from './shared';
 
 const TREASURY_ADDRESS = process.env.NEXT_PUBLIC_TREASURY_ADDRESS;
 const BLOCKFROST_PROJECT_ID = process.env.BLOCKFROST_PROJECT_ID;
 
+const PLAN_PRICES: Record<string, number> = {
+  'BASIC': 8,
+  'PRO': 60
+};
+
 export async function verifyPaymentAndUpdatePlan(userId: string, txHash: string, planType: string): Promise<boolean> {
-  if(!TREASURY_ADDRESS || !BLOCKFROST_PROJECT_ID){
+  if (!TREASURY_ADDRESS || !BLOCKFROST_PROJECT_ID) {
     throw new Error('Missing critical environment variables.');
   }
 
-  try {
-    // 1. Verify transaction on-chain via Blockfrost
-    if (BLOCKFROST_PROJECT_ID.startsWith('testnet')) {
-      // Skipping strict on-chain validation for testing.
-      console.warn('Using dummy Blockfrost key. Skipping strict on-chain validation for testing.');
-    } else {
-      const provider = new BlockfrostProvider(BLOCKFROST_PROJECT_ID);
-      const txDetails = await provider.fetchTxInfo(txHash);
-      //@ts-expect-error - Outputs is not a property of TransactionInfo
-      if(txDetails.outputs.find((o) => o.output.address === TREASURY_ADDRESS)){
-        return false;
-      }
+  const expectedUsdPrice = PLAN_PRICES[planType?.toUpperCase()];
+  if (!expectedUsdPrice) {
+    throw new Error('Invalid plan type.');
+  }
 
-      // Verify the transaction was successful and sent to the treasury
-      // You would add checks here to ensure the exact ADA amount is sent
-      // For example, inspecting txDetails.outputs
+  try {
+    // 1. Check if Tx is already consumed to prevent replay attacks
+    const checkQuery = `
+      MATCH (s:Mosaic_Subscription {lastPaymentTxHash: $txHash})
+      RETURN s
+    `;
+    const existing = await runRead(checkQuery, { txHash }, row => row.s);
+    if (existing && existing.length > 0) {
+      throw new Error('Transaction hash has already been consumed.');
     }
 
-    // 2. Update user plan in Memgraph
-    const query = `
+    // 2. Fetch live ADA price from CoinGecko
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=cardano&vs_currencies=usd');
+    const data = await res.json();
+    const liveAdaPrice = data.cardano.usd;
+    
+    const requiredAda = expectedUsdPrice / liveAdaPrice;
+    const requiredLovelace = Math.ceil(requiredAda * 1_000_000);
+    const minAcceptableLovelace = Math.floor(requiredLovelace * 0.95); // 5% slippage
+
+    // 3. Verify received UTXO via Blockfrost
+    const provider = new BlockfrostProvider(BLOCKFROST_PROJECT_ID);
+    const outputs = await provider.fetchUTxOs(txHash);
+    
+    let totalLovelaceReceived = 0;
+
+    for (const out of outputs) {
+       const address = out.output.address;
+
+       if (address === TREASURY_ADDRESS) {
+           const amountArr = out.output.amount;
+           const lovelaceObj = amountArr.find(a => a.unit === 'lovelace');
+           if (lovelaceObj) {
+               totalLovelaceReceived += parseInt(lovelaceObj.quantity, 10);
+           }
+       }
+    }
+
+    if (totalLovelaceReceived < minAcceptableLovelace) {
+      throw new Error(`Insufficient payment. Expected ~${requiredLovelace} lovelace, but found ${totalLovelaceReceived}.`);
+    }
+
+    // 4 & 5. Mark payment UTXO as consumed and Extend subscription period in Memgraph
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days subscription
+
+    const updateQuery = `
       MATCH (u:Mosaic_User {id: $userId})
-      SET u.planType = $planType
-      RETURN u
+      MERGE (u)-[:HAS_SUBSCRIPTION]->(s:Mosaic_Subscription)
+      SET s.expiresAt = $expiresAt,
+          s.lastPaymentTxHash = $txHash,
+          s.status = 'ACTIVE',
+          s.planType = $planType,
+          u.planType = $planType
+      RETURN u, s
     `;
 
-    const result = await runWrite(query, { userId, planType }, row => row.u);
+    const result = await runWrite(updateQuery, { 
+      userId, 
+      planType: planType.toUpperCase(),
+      txHash,
+      expiresAt: expiresAt.toISOString()
+    }, row => row);
+
     if (!result || result.length === 0) {
       throw new Error('User not found or plan update failed.');
     }
@@ -42,6 +90,6 @@ export async function verifyPaymentAndUpdatePlan(userId: string, txHash: string,
     return true;
   } catch (error) {
     console.error('Payment verification failed:', error);
-    return false;
+    throw error; // Rethrow to let the route handler capture the specific message
   }
 }
