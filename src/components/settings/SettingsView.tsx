@@ -9,13 +9,7 @@ import ProfileTab from './tabs/ProfileTab';
 import PrivacyTab from './tabs/PrivacyTab';
 import FeedTab from './tabs/FeedTab';
 import NotificationsTab from './tabs/NotificationsTab';
-import dynamic from 'next/dynamic';
-
-const AccountTab = dynamic(
-  () => import('@/components/settings/tabs/AccountTab').then(mod => mod.default),
-  { ssr: false, loading: () => <div className="text-center py-10">Loading Account Tab...</div> }
-);
-
+import AccountTab from './tabs/AccountTab';
 
 
 export default function SettingsView({ initialTab }: { initialTab?: SettingsTab }) {

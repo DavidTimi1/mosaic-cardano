@@ -2,6 +2,6 @@
 
 import { MeshProvider } from '@meshsdk/react';
 
-export default function MeshProviderWrapper({ children }: { children: React.ReactNode }) {
+export default function MeshProviderWrapper({ children }: { children?: React.ReactNode }) {
   return <MeshProvider>{children}</MeshProvider>;
 }

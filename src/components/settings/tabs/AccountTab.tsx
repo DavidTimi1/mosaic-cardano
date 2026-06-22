@@ -1,13 +1,23 @@
-import React from 'react';
 import { useGetAuthState } from '@/services/auth';
 import { Button } from '@/components/ui/button';
-import { CardanoWallet, useWallet } from '@meshsdk/react';
 import { useModals } from '@/contexts/modals-context';
 import { MODALS } from '@/lib/modals';
+
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const WalletConnectedText = dynamic(() => import('@/components/wallet/WalletStatus').then((m) => m.WalletConnectedText), {
+  loading: () => <Skeleton className="w-30 h-6" />
+});
+const WalletStatus = dynamic(() => import('@/components/wallet/WalletStatus').then((m) => m.WalletStatus), {
+  loading: () => <Skeleton className="w-40 h-12" />
+});
+
+
+
 export default function AccountTab() {
   const { data: authState } = useGetAuthState();
   const user = authState?.user;
-  const { connected } = useWallet();
   const { openModal } = useModals();
 
   return (
@@ -21,10 +31,10 @@ export default function AccountTab() {
         <div className="flex flex-col gap-2">
           <label className="text-sm font-bold text-theme-on-surface">Email Address</label>
           <div className="flex flex-col md:flex-row gap-3">
-            <input 
-              type="email" 
+            <input
+              type="email"
               disabled
-              value={user?.username ? `${user.username}@example.com` : 'user@example.com'} 
+              value={user?.username ? `${user.username}@example.com` : 'user@example.com'}
               className="flex-1 p-2.5 bg-theme-surface-high border border-theme-outline/20 rounded-xl text-sm font-medium text-theme-on-surface opacity-70 cursor-not-allowed"
             />
             <Button variant="outline">Change Email</Button>
@@ -67,10 +77,12 @@ export default function AccountTab() {
               <div className="w-8 h-8 rounded-full bg-[#0033AD]/10 flex items-center justify-center text-[#0033AD] font-bold text-lg">₳</div>
               <div>
                 <p className="text-sm font-medium text-theme-forest">Cardano Wallet</p>
-                <p className="text-xs text-theme-on-surface/60">{connected ? 'Connected securely' : 'Not connected'}</p>
+                <p className="text-xs text-theme-on-surface/60">
+                  <WalletConnectedText />
+                </p>
               </div>
             </div>
-            <CardanoWallet />
+            <WalletStatus />
           </div>
           <p className="text-xs text-theme-on-surface/50 mt-2">Connect your wallet to receive SCR rewards, participate in governance, and manage your subscriptions.</p>
         </div>

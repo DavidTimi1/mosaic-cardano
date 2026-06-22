@@ -8,12 +8,19 @@ import NextTopLoader from "nextjs-toploader";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ModalsProvider } from "@/contexts/modals-context";
 import { ModalsContainer } from "@/components/layout/ModalsContainer";
-import { ParseIntent } from "@/components/layout/ParseIntent";
+import { Toaster } from "@/components/ui/sonner";
+import dynamic from 'next/dynamic';
+
+const MeshProviderWrapper = dynamic(
+  () => import('@/contexts/mesh-provider').then((mod) => mod.default),
+  { ssr: false }
+);
 
 const figtree = Figtree({ subsets: ['latin'], variable: '--font-sans', adjustFontFallback: true, });
 
 
 import type { Metadata } from 'next';
+import { Initialize } from "@/components/layout/Initialize";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
@@ -52,14 +59,6 @@ export const metadata: Metadata = {
 };
 
 
-import { Toaster } from "@/components/ui/sonner";
-import dynamic from 'next/dynamic';
-
-const MeshProviderWrapper = dynamic(
-  () => import('@/contexts/mesh-provider'),
-  { ssr: false }
-);
-
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={cn("font-sans", figtree.variable)}>
@@ -67,15 +66,19 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <QueryProvider>
           <AuthProvider>
             <ModalsProvider>
-              <MeshProviderWrapper>
-                <ParseIntent />
-                <NextTopLoader color="var(--color-theme-accent)" />
-                <div className="min-h-screen bg-[#FFFBF5] relative selection:bg-amber-200/50">
-                  {children}
-                  <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#4338CA]/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
-                </div>
-                <ModalsContainer />
-              </MeshProviderWrapper>
+              <div id="up">
+                <MeshProviderWrapper>
+                  <div id="up">
+                    <Initialize />
+                    <NextTopLoader color="var(--color-theme-accent)" />
+                    <div className="min-h-screen bg-[#FFFBF5] relative selection:bg-amber-200/50">
+                      {children}
+                      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#4338CA]/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
+                    </div>
+                    <ModalsContainer />
+                  </div>
+                </MeshProviderWrapper>
+              </div>
             </ModalsProvider>
           </AuthProvider>
         </QueryProvider>
