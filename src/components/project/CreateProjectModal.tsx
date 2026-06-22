@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState } from 'react';
-import { X, Loader2, Target, Calendar } from 'lucide-react';
+import { Loader2, Target, Calendar } from 'lucide-react';
 import { useCreateProject } from '@/services/projects';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { useGetFeaturedVillages } from '@/services/villages';
 import { ROUTES } from '@/lib/routes';
+import { CloseButton } from '../ui/close-button';
 
 export default function CreateProjectModal({
   isOpen,
@@ -56,9 +57,7 @@ export default function CreateProjectModal({
 
         <div className="px-6 py-4 border-b border-theme-outline/20 flex justify-between items-center bg-theme-surface-low">
           <h2 className="font-serif text-xl font-medium text-theme-forest">Initialize Project</h2>
-          <button onClick={onClose} disabled={isPending} className="text-theme-on-surface/50 hover:text-theme-forest transition-colors cursor-pointer disabled:opacity-50">
-            <X size={20} />
-          </button>
+          <CloseButton disabled={isPending} onClick={onClose} />
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">

@@ -3,21 +3,22 @@
 import React from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams, usePathname, useRouter } from 'next/navigation';
-import { 
-  ChevronRightIcon, 
-  X, 
+import {
+  ChevronRightIcon,
   CheckCircle
 } from 'lucide-react';
 import { useGetExploreItem } from '@/services/explore';
-import { 
-  useGetVillageDetails, 
-  useGetVillageFeaturedWorks, 
-  useGetVillageTreasuryAllocations, 
-  useGetVillageMembers 
+import {
+  useGetVillageDetails,
+  useGetVillageFeaturedWorks,
+  useGetVillageTreasuryAllocations,
+  useGetVillageMembers
 } from '@/services/villages';
 import { ROUTES } from '@/lib/routes';
 import NotFound from '@/components/layout/NotFound';
 import { PageError } from '@/components/ui/PageError';
+import { Button } from '@/components/ui/button';
+import { CloseButton } from '@/components/ui/close-button';
 
 export default function CommunityPublicProfile() {
   const params = useParams();
@@ -32,7 +33,7 @@ export default function CommunityPublicProfile() {
   const { data: focusedItem, isLoading: isLoadingFocusedItem } = useGetExploreItem(focusId);
 
   // Load village profile data using React Query hooks
-  const { data: villageDetails, isError: isVillageError, is404Error: isVillage404Error, error:villageError, isLoading: isLoadingDetails } = useGetVillageDetails(communityId);
+  const { data: villageDetails, isError: isVillageError, is404Error: isVillage404Error, error: villageError, isLoading: isLoadingDetails } = useGetVillageDetails(communityId);
   const { data: featuredWorks, isLoading: isLoadingWorks } = useGetVillageFeaturedWorks(communityId);
   const { data: treasuryAllocations, isLoading: isLoadingTreasury } = useGetVillageTreasuryAllocations(communityId);
   const { data: members, isLoading: isLoadingMembers } = useGetVillageMembers(communityId);
@@ -54,7 +55,7 @@ export default function CommunityPublicProfile() {
 
   return (
     <div className="w-full min-h-screen pb-24 relative">
-      
+
       {/* Hero Section */}
       <section className="relative w-full h-[60vh] min-h-[400px] flex flex-col items-center justify-center text-center px-6 border-b border-theme-outline/20">
         <div className="absolute inset-0 bg-theme-parchment/50 backdrop-blur-sm z-0"></div>
@@ -80,15 +81,16 @@ export default function CommunityPublicProfile() {
           )}
           <div className="pt-8 flex items-center justify-center gap-6">
             {!villageDetails?.isMember && (
-              <button className="bg-theme-forest text-theme-parchment px-8 py-4 rounded-lg font-bold uppercase tracking-widest text-sm hover:opacity-90 transition-all shadow-xl hover:-translate-y-1 cursor-pointer">
+              <Button>
                 Join
-              </button>
+              </Button>
             )}
 
-            <Link href={ROUTES.STUDIO} className="text-theme-accent font-bold uppercase tracking-widest text-sm hover:underline underline-offset-4 transition-all">
-              View Open Works
-            </Link>
-
+            <Button asChild variant="outline">
+              <Link href={ROUTES.STUDIO}>
+                View Open Works
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -108,7 +110,7 @@ export default function CommunityPublicProfile() {
           <div>
             <div className="flex items-center justify-between border-b border-theme-outline/20 pb-4 mb-8">
               <h3 className="font-sans text-xs uppercase tracking-widest text-theme-accent font-bold">Featured Works</h3>
-              
+
               <Link href={ROUTES.VILLAGE.LIBRARY(communityId)} className="text-theme-forest font-bold uppercase tracking-widest text-xs flex items-center gap-1 hover:underline underline-offset-4 transition-all">
                 View Archive <ChevronRightIcon size={14} />
               </Link>
@@ -212,7 +214,7 @@ export default function CommunityPublicProfile() {
               </h3>
               <div className="flex flex-wrap gap-2">
                 {members?.length === 0 ? (
-                   <span className="text-xs text-theme-on-surface/50 italic">No members found.</span>
+                  <span className="text-xs text-theme-on-surface/50 italic">No members found.</span>
                 ) : (
                   <>
                     {members?.slice(0, 12).map((member: { displayName?: string }, i: number) => (
@@ -240,7 +242,7 @@ export default function CommunityPublicProfile() {
       {/* ==================================================================== */}
       {focusId && (
         <div className="fixed inset-0 bg-theme-forest/30 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div 
+          <div
             className="bg-theme-parchment border border-theme-outline/35 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -280,17 +282,12 @@ export default function CommunityPublicProfile() {
                       Originates from <span className="font-semibold text-theme-forest">{focusedItem.communityName}</span> • Located in <span className="font-semibold">{focusedItem.location}</span>
                     </p>
                   </div>
-                  <button 
-                    onClick={handleCloseModal}
-                    className="text-theme-on-surface/50 hover:text-theme-forest p-1.5 rounded-lg border border-theme-outline/20 hover:bg-theme-surface-high transition-colors cursor-pointer"
-                  >
-                    <X size={18} />
-                  </button>
+                  <CloseButton onClick={handleCloseModal} />
                 </div>
 
                 {/* Modal Body */}
                 <div className="p-6 md:p-8 space-y-6">
-                  
+
                   {/* Description */}
                   <div className="space-y-2">
                     <h4 className="text-[10px] uppercase tracking-widest font-bold font-sans text-theme-accent">
@@ -439,19 +436,19 @@ export default function CommunityPublicProfile() {
                     * Note: Action details will be securely logged in your local history logs.
                   </span>
                   <div className="flex gap-3">
-                    <button 
+                    <button
                       onClick={handleCloseModal}
                       className="bg-transparent border border-theme-outline/30 text-theme-forest px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-bold font-sans hover:bg-theme-surface-high transition-colors cursor-pointer"
                     >
                       Dismiss
                     </button>
-                    <button 
+                    <button
                       onClick={() => alert(`Simulating action: Joining/Contributing to "${focusedItem.title}"`)}
                       className="bg-theme-forest text-theme-parchment px-6 py-3 rounded-lg text-xs uppercase tracking-widest font-bold font-sans hover:opacity-90 transition-opacity shadow-md cursor-pointer"
                     >
-                      {focusedItem.type === 'project' ? 'Submit Contribution' : 
-                       focusedItem.type === 'residency' ? 'Submit Application' : 
-                       focusedItem.type === 'publication' ? 'Read Document' : 'Join Action'}
+                      {focusedItem.type === 'project' ? 'Submit Contribution' :
+                        focusedItem.type === 'residency' ? 'Submit Application' :
+                          focusedItem.type === 'publication' ? 'Read Document' : 'Join Action'}
                     </button>
                   </div>
                 </div>
@@ -460,7 +457,7 @@ export default function CommunityPublicProfile() {
               <div className="p-8 text-center space-y-4">
                 <h3 className="font-serif text-lg text-theme-forest">Collection Item Not Found</h3>
                 <p className="text-sm text-theme-on-surface/60">The item could not be retrieved from the commons registry.</p>
-                <button 
+                <button
                   onClick={handleCloseModal}
                   className="bg-theme-forest text-theme-parchment px-4 py-2 rounded-lg text-xs uppercase tracking-widest font-bold cursor-pointer"
                 >
