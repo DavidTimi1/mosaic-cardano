@@ -1,6 +1,8 @@
 export const MODALS = {
   CREATE_PROJECT: 'CREATE_PROJECT',
   PRICING: 'PRICING',
+  WALLET_CONNECT: 'WALLET_CONNECT',
+  VERIFY_PAYMENT: 'VERIFY_PAYMENT',
 } as const;
 
 export type ModalId = typeof MODALS[keyof typeof MODALS];
