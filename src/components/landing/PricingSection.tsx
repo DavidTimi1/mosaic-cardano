@@ -2,13 +2,21 @@
 
 import React from 'react';
 import { motion, Variants } from 'framer-motion';
-import { Check, HashIcon, Info, Loader2 } from 'lucide-react';
+import { Check, HashIcon, Info } from 'lucide-react';
 import { Button } from '../ui/button';
 import { TexturedCard } from '../ui/textured-card';
 import { useGetAuthState } from '@/services/auth';
-import { useExecutePlanPayment } from '@/lib/blockchain';
 
-import { useWallet } from '@meshsdk/react';
+
+import { useModals } from '@/contexts/modals-context';
+import { MODALS } from '@/lib/modals';
+import { useEffect, useRef, useState } from 'react';
+
+import dynamic from 'next/dynamic';
+import { Skeleton } from '../ui/skeleton';
+const PaymentTriggerButton = dynamic(() => import('./PaymentTriggerButton').then((m) => m.PaymentTriggerButton), {
+  loading: () => <Skeleton className="w-full h-12" />
+});
 
 const pricingVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -31,8 +39,8 @@ interface PricingCardProps {
   popular?: boolean;
   patternId: 1 | 2 | 3 | 4 | 5;
   patternColor: string;
-  onClick?: () => void;
-  isLoading?: boolean;
+  loadingPlan?: string;
+  setIsLoading?: (plan: string) => void;
 }
 
 const PricingCard = ({
@@ -47,8 +55,8 @@ const PricingCard = ({
   popular,
   patternId,
   patternColor,
-  onClick,
-  isLoading
+  loadingPlan,
+  setIsLoading
 }: PricingCardProps) => {
 
   return (
@@ -62,8 +70,8 @@ const PricingCard = ({
         patternColor={patternColor}
         patternOpacity={isEmphasized ? "opacity-20" : "opacity-10"}
         className={`h-full flex flex-col transition-all duration-500 rounded-3xl p-8 relative overflow-hidden ${isEmphasized
-            ? 'bg-theme-parchment shadow-2xl hover:border hover:border-theme-accent/30 hover:-translate-y-2'
-            : 'bg-theme-surface-high/80 backdrop-blur-xl border-2 border-theme-outline/20 shadow-lg hover:shadow-xl hover:border-theme-accent/30 hover:-translate-y-2'
+          ? 'bg-theme-parchment shadow-2xl hover:border hover:border-theme-accent/30 hover:-translate-y-2'
+          : 'bg-theme-surface-high/80 backdrop-blur-xl border-2 border-theme-outline/20 shadow-lg hover:shadow-xl hover:border-theme-accent/30 hover:-translate-y-2'
           }`}
       >
         {popular && (
@@ -81,7 +89,7 @@ const PricingCard = ({
               {originalPrice && (
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xl text-theme-on-surface/40 line-through decoration-red-500/50 decoration-2 font-serif">
-                     <span className="sr-only">original price of {title} plan: </span>${originalPrice}
+                    <span className="sr-only">original price of {title} plan: </span>${originalPrice}
                   </span>
                   <span className="bg-theme-accent/10 text-theme-accent border border-theme-accent/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest">
                     60% Off Beta
@@ -112,28 +120,64 @@ const PricingCard = ({
             </div>
           ))}
         </div>
-
-        <Button
-          onClick={onClick}
-          disabled={isLoading}
-          variant={isEmphasized ? "default" : "outline"}
-          className="w-full uppercase tracking-widest font-bold text-xs py-6 shadow-xl hover:shadow-theme-accent/20"
-        >
-          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : buttonText}
-        </Button>
+        
+        <PaymentTriggerButton
+          planType={title}
+          usdPrice={Number(price)}
+          loadingPlan={loadingPlan}
+          setIsLoading={setIsLoading}
+          buttonText={buttonText}
+          isEmphasized={isEmphasized}
+        />
       </TexturedCard>
     </motion.div>
   );
 };
 
+
 export const PricingSection = ({ containerVariants, isModal = false }: { containerVariants: Variants, isModal?: boolean }) => {
   const { data: authState } = useGetAuthState();
-  const { processingPlan, executePlanPayment } = useExecutePlanPayment();
-  const { connected, wallet } = useWallet();
+  const { openModal } = useModals();
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [loadingPlan, setIsLoading] = useState('');
+  const [focusedIndex, setFocusedIndex] = useState(1);
 
-  const handlePlanClick = async (planType: string, usdPrice: number) => {
-    executePlanPayment(planType, usdPrice, connected, wallet);
-  };
+  useEffect(() => {
+    // Scroll to center initially
+    if (carouselRef.current && window.innerWidth < 768) {
+      const container = carouselRef.current;
+      const centerItem = container.children[1] as HTMLElement; // Pro plan is 2nd item
+      if (centerItem) {
+        const scrollLeft = centerItem.offsetLeft - (container.clientWidth / 2) + (centerItem.clientWidth / 2);
+        container.scrollTo({ left: scrollLeft, behavior: 'instant' });
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const container = carouselRef.current;
+    if (!container) return;
+
+    // Only apply IntersectionObserver on mobile
+    if (window.innerWidth >= 768) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const index = Number(entry.target.getAttribute('data-index'));
+          setFocusedIndex(index);
+        }
+      });
+    }, {
+      root: container,
+      threshold: 0.6 // triggers when card is 60% visible
+    });
+
+    const children = container.children;
+    Array.from(children).forEach(child => observer.observe(child));
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <motion.section
@@ -141,11 +185,11 @@ export const PricingSection = ({ containerVariants, isModal = false }: { contain
       whileInView="visible"
       viewport={{ once: true, margin: "-100px" }}
       variants={containerVariants}
-      className={`relative z-10 w-full flex flex-col items-center ${isModal ? 'py-16 px-4 bg-transparent' : 'py-32 px-6'}`}
+      className={`relative z-10 w-full flex flex-col items-center ${isModal ? 'py-16 bg-transparent' : 'py-32 overflow-hidden'}`}
     >
       {!isModal && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-theme-accent/5 rounded-full blur-[100px] -z-10 pointer-events-none"></div>}
 
-      <div className="text-center mb-16">
+      <div className="text-center py-4 px-6">
         <motion.div variants={pricingVariants} className="inline-flex items-center gap-2 bg-theme-accent/10 text-theme-accent px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
           <HashIcon size={14} /> Now In Beta
         </motion.div>
@@ -153,68 +197,91 @@ export const PricingSection = ({ containerVariants, isModal = false }: { contain
         <motion.p variants={pricingVariants} className="font-sans text-lg text-theme-on-surface/70 max-w-2xl mx-auto">
           Start your community with our exclusive beta rates. Prices are displayed in USD but will be paid in their ADA equivalent.
         </motion.p>
+        
+        {isModal && (
+          <motion.div variants={pricingVariants} className="my-6">
+            <Button
+              variant="link"
+              onClick={() => openModal(MODALS.VERIFY_PAYMENT)}
+              className="text-theme-accent"
+            >
+              Already Paid? Verify Transaction
+            </Button>
+          </motion.div>
+        )}
       </div>
 
-      <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-7xl`}>
-        <PricingCard
-          title="Basic"
-          description="Perfect for testing the waters with your community."
-          price={8}
-          originalPrice={20}
-          interval="mo"
-          features={[
-            'Create 1 Village',
-            'Up to 50 Members',
-            'Standard Piece Storage',
-            'Basic Governance Tools'
-          ]}
-          buttonText={authState?.isAuthenticated ? "Pay with ADA" : "Get Started"}
-          patternId={1}
-          patternColor="text-theme-clay"
-          isLoading={processingPlan === 'BASIC'}
-          onClick={() => handlePlanClick('BASIC', 8)}
-        />
+      <div
+        ref={carouselRef}
+        className={`flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none w-full gap-6 px-[10vw] py-6 md:px-0 max-w-7xl [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:justify-center`}
+        style={{ scrollPadding: '10vw' }}
+      >
+        <div data-index={0} className="snap-center shrink-0 w-[85vw] md:w-auto h-full transition-transform duration-500 md:transform-none" style={{ transform: focusedIndex === 0 && typeof window !== 'undefined' && window.innerWidth < 768 ? 'translateY(-8px)' : 'none' }}>
+          <PricingCard
+            title="Basic"
+            description="Perfect for testing the waters with your community."
+            price={8}
+            originalPrice={20}
+            interval="mo"
+            features={[
+              'Create 1 Village',
+              'Up to 50 Members',
+              'Standard Piece Storage',
+              'Basic Governance Tools'
+            ]}
+            buttonText={authState?.isAuthenticated ? "Pay with ADA" : "Get Started"}
+            patternId={1}
+            patternColor="text-theme-clay"
+            isEmphasized={focusedIndex === 0 && typeof window !== 'undefined' && window.innerWidth < 768}
+            loadingPlan={loadingPlan}
+            setIsLoading={setIsLoading}
+          />
+        </div>
 
-        <PricingCard
-          title="Pro"
-          description="Build a lasting foundation for your members."
-          price={60}
-          originalPrice={150}
-          interval="mo"
-          features={[
-            'Create Unlimited Villages',
-            'Up to 500 Members/Village',
-            'Premium Piece Storage',
-            'Advanced Governance Tools',
-            'Custom Theming'
-          ]}
-          buttonText={authState?.isAuthenticated ? "Pay with ADA" : "Upgrade to Pro"}
-          isEmphasized
-          popular
-          patternId={2}
-          patternColor="text-theme-accent"
-          isLoading={processingPlan === 'PRO'}
-          onClick={() => handlePlanClick('PRO', 60)}
-        />
+        <div data-index={1} className="snap-center shrink-0 w-[85vw] md:w-auto h-full transition-transform duration-500 md:transform-none" style={{ transform: focusedIndex === 1 && typeof window !== 'undefined' && window.innerWidth < 768 ? 'translateY(-8px)' : 'none' }}>
+          <PricingCard
+            title="Pro"
+            description="Build a lasting foundation for your members."
+            price={60}
+            originalPrice={150}
+            interval="mo"
+            features={[
+              'Create Unlimited Villages',
+              'Up to 500 Members/Village',
+              'Premium Piece Storage',
+              'Advanced Governance Tools',
+              'Custom Theming'
+            ]}
+            buttonText={authState?.isAuthenticated ? "Pay with ADA" : "Upgrade to Pro"}
+            isEmphasized={typeof window !== 'undefined' && window.innerWidth >= 768 ? true : focusedIndex === 1}
+            popular
+            patternId={2}
+            patternColor="text-theme-accent"
+            loadingPlan={loadingPlan}
+            setIsLoading={setIsLoading}
+          />
+        </div>
 
-        <PricingCard
-          title="Custom"
-          description="For large institutions and distributed networks."
-          features={[
-            'Unlimited Villages & Members',
-            'Dedicated Storage Nodes',
-            'White-label Options',
-            'SLA & Priority Support',
-            'Custom Integrations'
-          ]}
-          buttonText="Contact Sales"
-          patternId={3}
-          patternColor="text-theme-forest"
-          onClick={() => { window.location.href = 'mailto:sales@mosaic.so'; }}
-        />
+        <div data-index={2} className="snap-center shrink-0 w-[85vw] md:w-auto h-full transition-transform duration-500 md:transform-none" style={{ transform: focusedIndex === 2 && typeof window !== 'undefined' && window.innerWidth < 768 ? 'translateY(-8px)' : 'none' }}>
+          <PricingCard
+            title="Custom"
+            description="For large institutions and distributed networks."
+            features={[
+              'Unlimited Villages & Members',
+              'Dedicated Storage Nodes',
+              'White-label Options',
+              'SLA & Priority Support',
+              'Custom Integrations'
+            ]}
+            buttonText="Contact Sales"
+            patternId={3}
+            patternColor="text-theme-forest"
+            isEmphasized={focusedIndex === 2 && typeof window !== 'undefined' && window.innerWidth < 768}
+          />
+        </div>
       </div>
 
-      <motion.div variants={pricingVariants} className="mt-16 flex items-center gap-2 text-sm text-theme-on-surface/50 bg-theme-surface-high px-4 py-2 rounded-full border border-theme-outline/10">
+      <motion.div variants={pricingVariants} className="flex items-center gap-2 text-sm text-theme-on-surface/50 bg-theme-surface-high px-4 py-2 rounded-full border border-theme-outline/10">
         <Info size={16} />
         Future limits on invitations and memberships will be enforced post-beta.
       </motion.div>

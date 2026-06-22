@@ -1,11 +1,5 @@
-import React from 'react';
-import { X } from 'lucide-react';
-import dynamic from 'next/dynamic';
-
-const PricingSection = dynamic(
-  () => import('@/components/landing/PricingSection').then(mod => ({ default: mod.PricingSection })),
-  { ssr: false }
-);
+import { CloseButton } from '../ui/close-button';
+import { PricingSection } from '../landing/PricingSection';
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -21,15 +15,9 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-theme-forest/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-      <div className="bg-theme-parchment w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl relative animate-in zoom-in-95 duration-300">
-        
-        <button 
-          onClick={onClose} 
-          className="absolute top-4 right-4 z-50 text-theme-on-surface/50 hover:text-theme-forest transition-colors cursor-pointer"
-        >
-          <X size={24} />
-        </button>
+    <div className="fixed inset-0 bg-theme-forest/40 backdrop-blur-sm z-[100] flex items-center justify-center">
+      <div className="bg-theme-parchment w-full h-full overflow-y-auto relative animate-in zoom-in-95 duration-300">
+        <CloseButton className='z-10' onClick={onClose} />
 
         <PricingSection containerVariants={modalVariants} isModal={true} />
       </div>

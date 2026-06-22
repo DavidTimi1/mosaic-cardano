@@ -14,12 +14,7 @@ import { CommunityShowcaseSection } from './landing/CommunityShowcaseSection';
 import { LivingLibrarySection } from './landing/LivingLibrarySection';
 import { TrustSection } from './landing/TrustSection';
 import { CTASection } from './landing/CTASection';
-import dynamic from 'next/dynamic';
-
-const PricingSection = dynamic(
-  () => import('./landing/PricingSection').then(mod => ({ default: mod.PricingSection })),
-  { ssr: false }
-);
+import { PricingSection } from './landing/PricingSection';
 
 export default function LandingView() {
   const containerVariants = {
