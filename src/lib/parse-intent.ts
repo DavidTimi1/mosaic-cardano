@@ -6,7 +6,7 @@ import { useModals } from '@/contexts/modals-context';
 import { MODALS } from '@/lib/modals';
 import { AppIntent, INTENT_KEY, processPendingInvite } from '@/lib/intents';
 
-export const ParseIntent = () => {
+export const useParseIntent = () => {
   const { data: authState } = useGetAuthState();
   const { openModal } = useModals();
 
@@ -25,6 +25,4 @@ export const ParseIntent = () => {
       }
     }
   }, [authState?.isAuthenticated, openModal]);
-
-  return null;
 };
