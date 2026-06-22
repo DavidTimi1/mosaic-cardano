@@ -1,8 +1,9 @@
 import React from 'react';
-import { X, CheckCircle, FileText, Share2, Users, PlayCircle, ChevronRight } from 'lucide-react';
+import { CheckCircle, FileText, Share2, Users, PlayCircle, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ProjectDetail } from '@/services/projects';
 import { ROUTES } from '@/lib/routes';
+import { CloseButton } from '../ui/close-button';
 
 export type PublishStep = 'draft' | 'review' | 'attribution' | 'revenue' | 'signing' | 'success';
 
@@ -34,7 +35,7 @@ export default function PublishingModal({
         {/* Header */}
         <div className="px-8 py-5 border-b border-theme-outline/20 flex justify-between items-center bg-theme-surface-low">
           <h2 className="font-serif text-xl font-medium text-theme-forest">Publish Artifact</h2>
-          <button onClick={() => setPublishStep(null)} className="text-theme-on-surface/50 hover:text-theme-forest cursor-pointer"><X size={20} /></button>
+          <CloseButton onClick={() => setPublishStep(null)} />
         </div>
         
         {/* Body */}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { ReactNode } from 'react';
-import { BellIcon, PlusIcon, User, Palette, Award, LogOut, User2Icon } from 'lucide-react';
+import { BellIcon, PlusIcon, User, Palette, Award, LogOut, User2Icon, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useGetAuthState } from '@/services/auth';
@@ -18,6 +18,11 @@ import { useModals } from '@/contexts/modals-context';
 import { MODALS } from '@/lib/modals';
 import { useAuth } from '@/contexts/auth-context';
 import { Skeleton } from '../ui/skeleton';
+import dynamic from 'next/dynamic';
+
+const WalletStatus = dynamic(() => import('@/components/wallet/WalletStatus').then((mod) => mod.WalletStatus), {
+  ssr: false,
+});
 
 interface TopAppBarProps {
   leftContent?: ReactNode;
@@ -48,6 +53,8 @@ function TopAppBar({ leftContent, rightContent }: TopAppBarProps) {
 
         <div className="flex items-center gap-6">
           {rightContent}
+          
+          <WalletStatus />
 
           {isAuthenticated && (
             <DropdownMenu>
@@ -124,6 +131,15 @@ function TopAppBar({ leftContent, rightContent }: TopAppBarProps) {
                       <div className="flex items-center gap-3 w-full">
                         <Award size={16} className="text-theme-on-surface/60" />
                         <span>Badges</span>
+                      </div>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem onClick={() => openModal(MODALS.WALLET_CONNECT)} className="cursor-pointer font-sans text-sm py-2.5 rounded-lg">
+                      <div className="flex items-center gap-3 w-full">
+                        <Wallet size={16} className="text-theme-on-surface/60" />
+                        <span>Manage Wallet</span>
                       </div>
                     </DropdownMenuItem>
 

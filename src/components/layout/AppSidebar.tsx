@@ -13,6 +13,7 @@ import {
   PlusIcon,
   ChevronDownIcon,
   LogInIcon,
+  CrownIcon
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,8 @@ import { Button } from '../ui/button';
 import { useGetAuthState } from '@/services/auth';
 import { ROUTES } from '@/lib/routes';
 import { useGetMyVillages } from '@/services/villages';
+import { useModals } from '@/contexts/modals-context';
+import { MODALS } from '@/lib/modals';
 
 export default function AppSidebar() {
   const pathname = usePathname();
@@ -34,6 +37,7 @@ export default function AppSidebar() {
 
   const { data: userVillages = [], isLoading: isLoadingVillages } = useGetMyVillages(isAuthenticated);
   const displayVillages = userVillages;
+  const { openModal } = useModals();
 
   useEffect(() => {
     setMounted(true);
@@ -259,6 +263,14 @@ export default function AppSidebar() {
 
       <div className={cn("mt-auto border-t border-theme-outline/20 pt-6 ", isCollapsed ? "px-2" : "px-4")}>
         <div className="space-y-2">
+          {isAuthenticated && (
+             <button onClick={() => openModal(MODALS.PRICING)} className={cn("flex w-full items-center text-sm font-bold text-theme-accent hover:bg-theme-accent/10 rounded-lg py-2 transition-colors cursor-pointer", isCollapsed ? "justify-center" : "gap-3 px-2")}>
+              <CrownIcon size={18} className="fill-theme-accent/20" />
+              {!isCollapsed && <span>Upgrade Plan</span>}
+              {isCollapsed && <span className="hidden group-hover:block absolute left-full ml-2 bg-theme-accent text-theme-parchment text-xs uppercase tracking-widest py-2 px-4 rounded-md z-50">Upgrade</span>}
+            </button>
+          )}
+
           {isAuthenticated ? (
             <Link href={ROUTES.SETTINGS} className={cn("flex items-center text-sm opacity-60 hover:opacity-100 hover:text-theme-accent py-2 transition-colors", isCollapsed ? "justify-center" : "gap-3 px-2")}>
               <SettingsIcon size={18} />

@@ -12,6 +12,7 @@ import ExploreFiltersPanel from './ExploreFiltersPanel';
 import ExploreTabs from './ExploreTabs';
 import ExploreCard from './ExploreCard';
 import { ROUTES } from '@/lib/routes';
+import { Button } from '../ui/button';
 
 export default function ExploreView() {
   const router = useRouter();
@@ -117,12 +118,13 @@ export default function ExploreView() {
             className="w-full pl-10 pr-10 py-2.5 bg-theme-surface-high border border-theme-outline/20 rounded-xl focus:outline-none focus:border-theme-clay/55 text-sm text-theme-on-surface font-sans shadow-sm"
           />
           {filters.query && (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleClearSearch}
-              className="absolute right-3 top-3 text-theme-on-surface/40 hover:text-theme-on-surface cursor-pointer"
             >
               <XIcon size={16} />
-            </button>
+            </Button>
           )}
         </div>
 

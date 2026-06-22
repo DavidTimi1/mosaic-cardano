@@ -6,6 +6,7 @@ import { useCreateVillage } from '@/services/villages';
 import { Loader2, ArrowRight, Flame, Globe, Type } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 import { FormError } from '@/components/ui/form-error';
+import { Button } from '@/components/ui/button';
 
 export default function CreateCommunityPage() {
   const router = useRouter();
@@ -103,10 +104,9 @@ export default function CreateCommunityPage() {
               />
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={isPending || !name || !description || isSuccess}
-              className="w-full bg-theme-forest text-theme-parchment rounded-xl py-4 flex items-center justify-center gap-2 font-bold text-sm uppercase tracking-widest hover:bg-theme-forest/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4 shadow-md active:scale-[0.98]"
             >
               {isPending || isSuccess ? (
                 <>
@@ -117,7 +117,7 @@ export default function CreateCommunityPage() {
                   Establish Settlement <ArrowRight size={18} />
                 </>
               )}
-            </button>
+            </Button>
           </form>
         </div>
     </div>

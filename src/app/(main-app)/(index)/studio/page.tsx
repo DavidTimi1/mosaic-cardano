@@ -7,6 +7,7 @@ import { useCreateArtifact, useGetUserArtifacts } from '@/services/projects'; //
 import { getLocalDocuments, LocalDocument } from '@/lib/indexeddb';
 import AppPageContainer from '@/components/layout/AppPageContainer';
 import { ROUTES } from '@/lib/routes';
+import { Button } from '@/components/ui/button';
 
 export default function StudioLandingPage() {
   const router = useRouter();
@@ -127,13 +128,12 @@ export default function StudioLandingPage() {
                 onChange={(e) => setExternalUrl(e.target.value)}
                 className="w-full bg-theme-surface border border-theme-outline/20 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-theme-accent/50 transition-all placeholder:text-theme-on-surface/30"
               />
-              <button 
+              <Button
                 type="submit"
                 disabled={!externalUrl || isLinking}
-                className="w-full bg-theme-forest text-theme-parchment rounded-lg py-3 flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-widest hover:bg-theme-forest/90 transition-all disabled:opacity-50"
               >
                 {isLinking ? <Loader2 size={16} className="animate-spin" /> : 'Link Document'}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -147,12 +147,12 @@ export default function StudioLandingPage() {
             <Clock size={20} className="text-theme-accent" /> Recent Documents
           </h2>
           {!showAllDocuments && mergedPieces.length > 4 && (
-            <button 
+            <Button 
+              variant="outline"
               onClick={() => setShowAllDocuments(true)}
-              className="text-xs font-bold uppercase tracking-widest text-theme-accent hover:text-theme-forest transition-colors flex items-center gap-1 cursor-pointer"
             >
               View More <ArrowRight size={14} />
-            </button>
+            </Button>
           )}
         </div>
 
