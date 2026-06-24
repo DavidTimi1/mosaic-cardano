@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import MosaicBrand from '../ui/icons/MosaicBrand';
 import { Github, Twitter } from 'lucide-react';
+import { CardanoIcon } from '../ui/icons/CardanoLogo';
 
 const SITEMAP = {
   Platform: [
@@ -68,7 +69,12 @@ export default function Footer() {
 
       <div className="max-w-7xl mx-auto mt-24 pt-8 border-t border-theme-parchment/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-mono text-theme-parchment/40">
         <p>© {new Date().getFullYear()} Mosaic. All rights reversed.</p>
-        <p>Built on Cardano. <br className="md:hidden"/> <span className="hidden md:inline">|</span> Built with ❤️ by <a href="https://github.com/davidtimi1" target="_blank" rel="noreferrer" className="underline hover:text-theme-accent transition-colors">Dev_id</a></p>
+        <p className='flex items-center gap-2'>
+          <Link href="https://cardano.org" className='flex items-center gap-2 hover:underline hover:text-white transition-colors' target='_blank' rel='noopener noreferrer'>
+            <CardanoIcon size={20} color='white' />
+            <span>Built on Cardano</span>
+          </Link>
+           <br className="md:hidden"/> <span className="hidden md:inline">|</span> Built with ❤️ by <a href="https://github.com/davidtimi1" target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">Dev_id</a></p>
       </div>
     </footer>
   );
