@@ -39,8 +39,24 @@ export async function verifyPaymentAndUpdatePlan(userId: string, txHash: string,
     const requiredLovelace = Math.ceil(requiredAda * 1_000_000);
     const minAcceptableLovelace = Math.floor(requiredLovelace * 0.95); // 5% slippage
 
-    // 3. Verify received UTXO via Blockfrost
+    
     const provider = new BlockfrostProvider(BLOCKFROST_PROJECT_ID);
+
+    // 3. Verify transaction metadata (CIP-20) to prevent hash stealing
+    const metadataArr = await provider.get(`/txs/${txHash}/metadata`) as Array<{ label: string; json_metadata?: { msg?: string[] } }>;
+    
+    // Look for label "674"
+    const targetMeta = metadataArr.find((m) => m.label === '674');
+    if (!targetMeta || !targetMeta.json_metadata || !targetMeta.json_metadata.msg) {
+      throw new Error("Transaction is missing required verification metadata.");
+    }
+    
+    const msgArr = targetMeta.json_metadata.msg;
+    if (!msgArr.includes(`User: ${userId}`)) {
+      throw new Error("Transaction metadata does not match the authenticated user.");
+    }
+
+    // 4. Verify received UTXO via Blockfrost
     const outputs = await provider.fetchUTxOs(txHash);
     
     let totalLovelaceReceived = 0;
@@ -61,7 +77,7 @@ export async function verifyPaymentAndUpdatePlan(userId: string, txHash: string,
       throw new Error(`Insufficient payment. Expected ~${requiredLovelace} lovelace, but found ${totalLovelaceReceived}.`);
     }
 
-    // 4 & 5. Mark payment UTXO as consumed and Extend subscription period in Memgraph
+    // 5 & 6. Mark payment UTXO as consumed and Extend subscription period in db
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days subscription
 

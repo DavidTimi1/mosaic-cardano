@@ -57,6 +57,7 @@ export const useExecutePlanPayment = () => {
 
             const tx = new Transaction({ initiator: wallet as unknown as IInitiator });
             tx.sendLovelace(TREASURY_ADDRESS, lovelaceAmount);
+            tx.setMetadata(674, { msg: ["Mosaic Upgrade", `User: ${authState?.user?.id}`] });
 
             const unsignedTx = await tx.build();
             //@ts-expect-error - Mesh wallet
