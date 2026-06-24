@@ -5,6 +5,8 @@ node_modules
 
 .next
 
+ze-guide
+
 # typescript
 *.tsbuildinfo
 tsconfig.tsbuildinfo
