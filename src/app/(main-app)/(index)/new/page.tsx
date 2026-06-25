@@ -7,10 +7,13 @@ import { Loader2, ArrowRight, Flame, Globe, Type } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 import { FormError } from '@/components/ui/form-error';
 import { Button } from '@/components/ui/button';
+import { useModals } from '@/contexts/modals-context';
+import { MODALS } from '@/lib/modals';
 
 export default function CreateCommunityPage() {
   const router = useRouter();
   const { mutateAsync: createVillage, isPending, isSuccess } = useCreateVillage();
+  const { openModal } = useModals();
   
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -36,8 +39,13 @@ export default function CreateCommunityPage() {
 
     } catch (err) {
       console.error("Failed to create village:", err);
-      const error = err as Error;
-      setError(error?.message || "Failed to create village. Please try again.");
+      const errorMessage = (err as Error).message || "Failed to create village. Please try again.";
+      if (errorMessage.includes('PLAN_LIMIT')) {
+        setError(errorMessage);
+        setTimeout(() => openModal(MODALS.PRICING), 1500);
+      } else {
+        setError(errorMessage);
+      }
     }
   };
 

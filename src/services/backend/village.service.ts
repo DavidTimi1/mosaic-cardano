@@ -22,6 +22,24 @@ export type VillageSummary = {
 export const villageService = {
 	async createCommunity(userId: string, input: { name: string; description?: string; tags?: string[] }): Promise<CommunityNode> {
 		const parsedUserId = z.string().uuid().parse(userId);
+
+		const limitCheck = await runRead(
+			`
+			MATCH (u:Mosaic_User {id: $userId})
+			OPTIONAL MATCH (u)-[:MEMBER_OF {role: 'ADMIN'}]->(c:Mosaic_Community)
+			RETURN u.planType AS planType, count(c) AS ownedCount
+			`,
+			{ userId: parsedUserId },
+			row => ({ planType: String(row.planType || 'FREE'), ownedCount: Number(row.ownedCount ?? 0) })
+		);
+
+		if (!limitCheck[0]) throw new Error('User not found');
+		const { planType, ownedCount } = limitCheck[0];
+
+		if (['FREE', 'BASIC'].includes(planType) && ownedCount >= 1) {
+			throw new Error('PLAN_LIMIT: Upgrade to Pro to create more than one village.');
+		}
+
 		const id = crypto.randomUUID();
 		const slug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 		const now = Date.now();
@@ -89,6 +107,26 @@ export const villageService = {
 	async joinCommunity(input: z.infer<typeof JoinCommunityRequestSchema>): Promise<void> {
 		const parsed = JoinCommunityRequestSchema.parse(input);
 		const now = Date.now();
+
+		const limitCheck = await runRead(
+			`
+			MATCH (c:Mosaic_Community {id: $communityId})<-[:MEMBER_OF {role: 'ADMIN'}]-(creator:Mosaic_User)
+			OPTIONAL MATCH (c)<-[:MEMBER_OF]-(member:Mosaic_User)
+			RETURN creator.planType AS planType, count(member) AS memberCount
+			LIMIT 1
+			`,
+			{ communityId: parsed.communityId },
+			row => ({ planType: String(row.planType || 'FREE'), memberCount: Number(row.memberCount ?? 0) })
+		);
+
+		if (limitCheck[0]) {
+			const { planType, memberCount } = limitCheck[0];
+			const maxMembers = planType === 'PRO' ? 500 : planType === 'CUSTOM' ? Infinity : 50;
+			
+			if (memberCount >= maxMembers) {
+				throw new Error('VILLAGE_FULL: This village has reached its member limit for its current plan.');
+			}
+		}
 
 		await runWrite(
 			`

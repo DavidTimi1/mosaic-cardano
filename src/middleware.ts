@@ -18,7 +18,8 @@ NO_FORCED_REDIRECT = [
 
 
 export function middleware(req: NextRequest) {
-  const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const isLoggingOut = req.cookies.has('mosaic_logging_out');
+  const token = isLoggingOut ? undefined : req.cookies.get(SESSION_COOKIE_NAME)?.value;
   
   const isAuthPage = req.nextUrl.pathname.startsWith(ROUTES.AUTH);
 
