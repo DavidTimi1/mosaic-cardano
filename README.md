@@ -27,7 +27,7 @@
 
 <br/>
 
-[✦ The Story](#-the-story) · [✦ The Problem](#-the-problem) · [✦ Who This Is For](#-who-this-is-for) · [✦ What Mosaic Does](#-what-mosaic-does) · [✦ The Roadmap](#-the-roadmap) · [✦ Follow Along](#-follow-along)
+[✦ The Story](#-the-story) · [✦ The Problem](#-the-problem) · [✦ Who This Is For](#-who-this-is-for) · [✦ What Mosaic Does](#-what-mosaic-does) · [✦ Technical Breakdown](docs.md) · [✦ The Roadmap](#-the-roadmap) · [✦ Follow Along](#-follow-along)
 
 </div>
 
