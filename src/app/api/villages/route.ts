@@ -12,13 +12,13 @@ export async function GET() {
 export const POST = withAuth(async (request, context, userId) => {
   try {
     const body = await request.json();
-    const { name, description, tags } = body;
+    const { name, description, tags, profileImageUrl } = body;
 
     if (!name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
-    const community = await villageService.createCommunity(userId, { name, description, tags });
+    const community = await villageService.createCommunity(userId, { name, description, tags, profileImageUrl });
 
     return NextResponse.json(community, { status: 201 });
   } catch (error) {
