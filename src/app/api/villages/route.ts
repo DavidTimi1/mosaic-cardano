@@ -5,7 +5,7 @@ import { villageService } from '@/services/backend/village.service';
 export const runtime = 'nodejs';
 
 export async function GET() {
-  const items = await villageService.listFeaturedVillages();
+  const items = await villageService.listFeaturedVillages(5);
   return NextResponse.json({ items });
 }
 

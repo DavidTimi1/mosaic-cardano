@@ -28,7 +28,7 @@ export const CommunityShowcaseSection = ({ itemVariants, containerVariants }: { 
               ))}
             </>
           ) : (
-            featuredVillages?.map((village, i) => (
+            featuredVillages?.slice(0, 3).map((village, i) => (
               <motion.div key={village.id} variants={itemVariants} className="group cursor-pointer h-full">
                 <TexturedCard 
                   patternId={((i % 5) + 1) as 1 | 2 | 3 | 4 | 5} 
