@@ -20,23 +20,27 @@ export type VillageSummary = {
 };
 
 export const villageService = {
-	async createCommunity(userId: string, input: { name: string; description?: string; tags?: string[] }): Promise<CommunityNode> {
+	async createCommunity(userId: string, input: { name: string; description?: string; tags?: string[]; profileImageUrl?: string | null }): Promise<CommunityNode> {
 		const parsedUserId = z.string().uuid().parse(userId);
-
-		const limitCheck = await runRead(
+		
+		const currentVillageCount = await runRead(
 			`
-			MATCH (u:Mosaic_User {id: $userId})
-			OPTIONAL MATCH (u)-[:MEMBER_OF {role: 'ADMIN'}]->(c:Mosaic_Community)
-			RETURN u.planType AS planType, count(c) AS ownedCount
+				MATCH (u:Mosaic_User {id: $userId})-[m:MEMBER_OF {role: 'ADMIN'}]->(c:Mosaic_Community)
+				WHERE coalesce(c.isDeleted, false) = false
+				RETURN count(c) as count
 			`,
 			{ userId: parsedUserId },
-			row => ({ planType: String(row.planType || 'FREE'), ownedCount: Number(row.ownedCount ?? 0) })
+			row => Number(row.count ?? 0)
 		);
 
-		if (!limitCheck[0]) throw new Error('User not found');
-		const { planType, ownedCount } = limitCheck[0];
+		const userPlan = await runRead(
+			`MATCH (u:Mosaic_User {id: $userId}) RETURN u.planType as planType`,
+			{ userId: parsedUserId },
+			row => String(row.planType || 'FREE')
+		);
 
-		if (['FREE', 'BASIC'].includes(planType) && ownedCount >= 1) {
+		const maxVillages = userPlan[0] === 'PRO' ? 5 : userPlan[0] === 'CUSTOM' ? Infinity : 1;
+		if (currentVillageCount[0] >= maxVillages) {
 			throw new Error('PLAN_LIMIT: Upgrade to Pro to create more than one village.');
 		}
 
@@ -51,6 +55,7 @@ export const villageService = {
 					c.id = $id,
 					c.name = $name,
 					c.description = $description,
+					c.profileImageUrl = $profileImageUrl,
 					c.createdAt = $now
 				WITH c
 				MATCH (u:Mosaic_User {id: $userId})
@@ -63,6 +68,7 @@ export const villageService = {
 				slug,
 				name: input.name,
 				description: input.description ?? null,
+				profileImageUrl: input.profileImageUrl ?? null,
 				userId: parsedUserId,
 				now,
 			},
@@ -371,7 +377,7 @@ export const villageService = {
 							name: community.name,
 							description: community.description ?? null,
 							memberCount: Number(row.memberCount ?? 0),
-							profileImageUrl: null,
+							profileImageUrl: community.profileImageUrl ?? null,
 						} satisfies VillageSummary;
 					},
 				);
@@ -406,7 +412,7 @@ export const villageService = {
 							name: community.name,
 							description: community.description ?? null,
 							memberCount: Number(row.memberCount ?? 0),
-							profileImageUrl: null,
+							profileImageUrl: community.profileImageUrl ?? null,
 						} satisfies VillageSummary;
 					},
 				);

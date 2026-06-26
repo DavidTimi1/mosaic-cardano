@@ -36,6 +36,7 @@ export async function GET(
       slug: community.slug,
       name: community.name,
       description: community.description || '',
+      profileImageUrl: community.profileImageUrl,
       memberCount: members.length,
       treasuryBalance: '0 SCR', // placeholder, treasury not in schema
       isMember,
