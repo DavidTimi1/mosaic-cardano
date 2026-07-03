@@ -7,7 +7,7 @@ import CreateProjectModal from '../project/CreateProjectModal';
 import PricingModal from '../modals/PricingModal';
 import VerifyPaymentModal from '../modals/VerifyPaymentModal';
 import FeedbackModal from '../modals/FeedbackModal';
-import { BadgesModal } from '../profile/BadgesModal';
+import { BadgesModal } from '../modals/BadgesModal';
 import dynamic from 'next/dynamic';
 
 const WalletConnectModal = dynamic(() => import('@/components/modals/WalletConnectModal'),

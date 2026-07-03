@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Award, Sparkles, Hexagon } from 'lucide-react';
 import { toast } from 'sonner';
+import { getBadgeConfig } from '@/lib/badges';
 
 
 export function BadgesModal() {
@@ -77,7 +78,9 @@ export function BadgesModal() {
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                             <AnimatePresence>
-                                {badges.map((badge) => (
+                                {badges.map((badge) => {
+                                    const config = getBadgeConfig(badge.type);
+                                    return (
                                     <motion.div
                                         key={badge.id}
                                         initial={{ opacity: 0, y: 20 }}
@@ -97,11 +100,11 @@ export function BadgesModal() {
                                         <div className={`w-16 h-16 rounded-full flex items-center justify-center bg-gradient-to-br ${
                                             badge.status === 'CLAIMED' ? 'from-theme-forest to-theme-clay' : 'from-theme-surface-high to-theme-outline/20'
                                         } shadow-inner`}>
-                                            <Hexagon className={`w-10 h-10 ${badge.status === 'CLAIMED' ? 'text-white' : 'text-theme-on-surface/40'}`} fill="currentColor" />
+                                            <span className={`text-3xl ${badge.status === 'CLAIMED' ? 'opacity-100' : 'opacity-40 grayscale'}`}>{config.icon}</span>
                                         </div>
 
                                         <div>
-                                            <h4 className="font-bold text-sm text-theme-on-surface">{badge.type}</h4>
+                                            <h4 className="font-bold text-sm text-theme-on-surface">{config.name}</h4>
                                             {badge.status === 'CLAIMED' && (
                                                 <a 
                                                     href={`https://preprod.cardanoscan.io/transaction/${badge.txHash}`} 
@@ -125,7 +128,8 @@ export function BadgesModal() {
                                             </Button>
                                         )}
                                     </motion.div>
-                                ))}
+                                    );
+                                })}
                             </AnimatePresence>
                         </div>
                     )}
