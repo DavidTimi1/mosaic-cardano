@@ -43,9 +43,9 @@ export const badgeService = {
                 ON CREATE SET 
                     b.id = $badgeId,
                     b.status = 'UNCLAIMED',
-                    b.createdAt = datetime().toString()
+                    b.createdAt = $now
             `,
-            { userId, badgeType, badgeId },
+            { userId, badgeType, badgeId, now: new Date().toISOString() },
             () => null
         );
     },
@@ -59,9 +59,9 @@ export const badgeService = {
                     b.assetNameHex = $assetNameHex,
                     b.assetNameBase = $assetNameBase,
                     b.txHash = $txHash,
-                    b.claimedAt = datetime().toString()
+                    b.claimedAt = $now
             `,
-            { userId, badgeId, policyId, assetNameHex, assetNameBase, txHash },
+            { userId, badgeId, policyId, assetNameHex, assetNameBase, txHash, now: new Date().toISOString() },
             () => null
         );
     }

@@ -1,50 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAuthSessionByToken } from '@/lib/backend/session';
+import { NextResponse } from 'next/server';
 import { badgeService } from '@/services/backend/badge.service';
 import { authService } from '@/services/backend/auth.service';
 import { mintCIP68Badge } from '@/lib/blockchain/minting';
 import { z } from 'zod';
+import { withAuth } from '@/lib/backend/request';
 
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async (req, context, userId) => {
     try {
-        const token = req.cookies.get('mosaic_session')?.value;
-        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-        const session = await getAuthSessionByToken(token);
-        if (!session) return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-
-        const badges = await badgeService.getUserBadges(session.userId);
+        const badges = await badgeService.getUserBadges(userId);
         return NextResponse.json({ badges });
     } catch (error) {
         console.error('Failed to fetch badges:', error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
-}
+});
 
 const ClaimSchema = z.object({
     badgeId: z.string()
 });
 
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (req, context, userId) => {
     try {
-        const token = req.cookies.get('mosaic_session')?.value;
-        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-        const session = await getAuthSessionByToken(token);
-        if (!session) return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-
         const body = await req.json();
         const { badgeId } = ClaimSchema.parse(body);
 
         // Verify the user owns this badge and it is UNCLAIMED
-        const badges = await badgeService.getUserBadges(session.userId);
+        const badges = await badgeService.getUserBadges(userId);
         const badge = badges.find(b => b.id === badgeId);
 
         if (!badge) return NextResponse.json({ error: "Badge not found" }, { status: 404 });
         if (badge.status === 'CLAIMED') return NextResponse.json({ error: "Badge already claimed" }, { status: 400 });
 
         // Get user's wallet address
-        const settings = await authService.getUserSettings(session.userId);
+        const settings = await authService.getUserSettings(userId);
         if (!settings?.walletAddress) {
             return NextResponse.json({ error: "You must link a Cardano wallet before claiming badges." }, { status: 400 });
         }
@@ -70,11 +58,11 @@ export async function POST(req: NextRequest) {
         );
 
         // Mark as claimed
-        await badgeService.markBadgeClaimed(session.userId, badge.id, policyId, assetNameHex, assetNameBase, txHash);
+        await badgeService.markBadgeClaimed(userId, badge.id, policyId, assetNameHex, assetNameBase, txHash);
 
         return NextResponse.json({ txHash, policyId, assetNameBase, assetNameHex });
     } catch (error: unknown) {
         console.error('Failed to claim badge:', error);
         return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to claim badge" }, { status: 500 });
     }
-}
+});
