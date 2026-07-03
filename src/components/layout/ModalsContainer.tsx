@@ -7,6 +7,7 @@ import CreateProjectModal from '../project/CreateProjectModal';
 import PricingModal from '../modals/PricingModal';
 import VerifyPaymentModal from '../modals/VerifyPaymentModal';
 import FeedbackModal from '../modals/FeedbackModal';
+import { BadgesModal } from '../modals/BadgesModal';
 import dynamic from 'next/dynamic';
 
 const WalletConnectModal = dynamic(() => import('@/components/modals/WalletConnectModal'),
@@ -39,6 +40,7 @@ export const ModalsContainer = () => {
         isOpen={isOpen(MODALS.FEEDBACK)}
         onClose={() => closeModal(MODALS.FEEDBACK)}
       />
+      <BadgesModal />
     </>
   );
 };

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { authService } from '@/services/backend/auth.service';
 import { settingsService } from '@/services/backend/settings.service';
+import { badgeService } from '@/services/backend/badge.service';
 
 export const runtime = 'nodejs';
 
@@ -19,11 +20,18 @@ export async function GET(
     const settings = await settingsService.getSettings(user.id);
     
     // Return default empty reputation schema, respecting privacy settings
+    let userBadges: { id: string; type: string; status: string }[] = [];
+    if (settings.profile.showBadges) {
+      const realBadges = await badgeService.getUserBadges(user.id);
+      userBadges = realBadges.map(b => ({
+        id: b.id,
+        type: b.type,
+        status: b.status
+      }));
+    }
+
     const defaultReputation = {
-      badges: settings.profile.showBadges ? [
-        // Mock badge if visible
-        { id: '1', name: 'Early Adopter', icon: '🌟' }
-      ] : [],
+      badges: userBadges,
       skills: [],
       communities: settings.profile.showCommunities ? [
         // Mock community if visible
