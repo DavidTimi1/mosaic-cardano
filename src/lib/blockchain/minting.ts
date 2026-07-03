@@ -1,4 +1,4 @@
-import { MeshWallet, BlockfrostProvider, ForgeScript, stringToHex, CIP68_100, CIP68_222, metadataToCip68, Transaction, resolveScriptHash } from '@meshsdk/core';
+import { MeshWallet, BlockfrostProvider, ForgeScript, stringToHex, CIP68_100, metadataToCip68, Transaction, resolveScriptHash } from '@meshsdk/core';
 
 // This is the App Wallet that will hold the Reference Tokens and have minting authority.
 export const getAppWallet = () => {
@@ -46,56 +46,23 @@ export const mintCIP68Badge = async (
     const forgeScript = getBadgePolicy(appWalletAddress);
     const policyId = resolveScriptHash(forgeScript);
 
-    // The asset name base (e.g. "MosaicBadge_userId")
-    const assetNameBase = `MosaicBadge_${badgeId}`;
+    // The asset name base must be <= 28 bytes. badgeId can be 39 chars, so we truncate it.
+    const assetNameBase = badgeId.substring(0, 28);
+    
+    // We compute assetNameHex for our database return valuemintCIP68Badge
     const assetNameHex = stringToHex(assetNameBase);
-
-    const referenceAssetName = `${CIP68_100(assetNameHex)}`;
-    const userAssetName = `${CIP68_222(assetNameHex)}`;
-
-    const cip68Datum = metadataToCip68(metadata);
 
     const tx = new Transaction({ initiator: appWallet });
 
-    // Mint Reference Token
     tx.mintAsset(forgeScript, {
-        assetName: referenceAssetName,
-        assetQuantity: '1'
-    });
-
-    // Mint User Token
-    tx.mintAsset(forgeScript, {
-        assetName: userAssetName,
-        assetQuantity: '1'
-    });
-
-    // Send Reference Token with inline Datum to AppWallet
-    tx.sendAssets(
-        {
-            address: appWalletAddress,
-            datum: {
-                value: cip68Datum,
-                inline: true
-            }
+        assetName: assetNameBase, // Mesh will call stringToHex internally
+        assetQuantity: '1',
+        metadata: metadata as unknown,
+        recipient: {
+            address: userAddress
         },
-        [
-            {
-                unit: policyId + referenceAssetName,
-                quantity: '1'
-            }
-        ]
-    );
-
-    // Send User Token to the user
-    tx.sendAssets(
-        { address: userAddress },
-        [
-            {
-                unit: policyId + userAssetName,
-                quantity: '1'
-            }
-        ]
-    );
+        cip68ScriptAddress: appWalletAddress
+    });
 
     const unsignedTx = await tx.build();
     const signedTx = await appWallet.signTx(unsignedTx);
@@ -112,7 +79,8 @@ export const updateBadgeMetadata = async (
     const appWallet = getAppWallet();
     const appWalletAddress = await appWallet.getChangeAddress();
     
-    const assetNameBase = `MosaicBadge_${badgeId}`;
+    // The asset name base must be <= 28 bytes.
+    const assetNameBase = badgeId.substring(0, 28);
     const assetNameHex = stringToHex(assetNameBase);
     const referenceAssetName = `${CIP68_100(assetNameHex)}`;
     const unit = policyId + referenceAssetName;
