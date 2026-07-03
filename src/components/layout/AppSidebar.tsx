@@ -315,11 +315,11 @@ export default function AppSidebar() {
             </SidebarTooltip>
           )}
 
-          <SidebarTooltip label="Support" isCollapsed={isCollapsed}>
-            <Link href={ROUTES.SUPPORT} className={cn("flex items-center text-sm opacity-60 hover:opacity-100 hover:text-theme-accent py-2 transition-colors", isCollapsed ? "justify-center" : "gap-3 px-2")}>
+          <SidebarTooltip label="Support & Feedback" isCollapsed={isCollapsed}>
+            <button onClick={() => openModal(MODALS.FEEDBACK)} className={cn("flex w-full items-center text-sm opacity-60 hover:opacity-100 hover:text-theme-accent py-2 transition-colors cursor-pointer", isCollapsed ? "justify-center" : "gap-3 px-2")}>
               <HelpCircleIcon size={18} />
-              {!isCollapsed && <span>Support</span>}
-            </Link>
+              {!isCollapsed && <span>Support & Feedback</span>}
+            </button>
           </SidebarTooltip>
 
           {!isAuthenticated && (
