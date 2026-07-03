@@ -29,8 +29,11 @@ export interface Contribution {
 
 export interface UserRep {
   id: string;
-  name: string;
-  icon: string;
+  type: string;
+  status: string;
+  // Mapped on frontend
+  name?: string;
+  icon?: string;
 }
 
 export interface Reputation {
@@ -53,6 +56,7 @@ export interface Reputation {
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchAPI } from './api';
+import { getBadgeConfig } from '@/lib/badges';
 
 export const useGetUserProfile = (username: string) => {
   return useXQuery<UserProfile>({
@@ -85,7 +89,19 @@ export const useGetUserReputation = (username: string) => {
   return useXQuery<Reputation>({
     queryKey: ['userReputation', username],
     queryFn: async () => {
-      return fetchAPI(`/api/users/${username}/reputation`) as Promise<Reputation>;
+      const data = await fetchAPI(`/api/users/${username}/reputation`) as Reputation;
+      
+      // Frontend badge mapping
+      data.badges = data.badges.map(b => {
+        const config = getBadgeConfig(b.type);
+        return {
+          ...b,
+          name: config.name,
+          icon: config.icon
+        };
+      });
+      
+      return data;
     }
   });
 };
