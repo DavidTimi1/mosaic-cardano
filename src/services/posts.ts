@@ -59,6 +59,7 @@ export const useCreatePost = (communityId: string) => {
       } else {
         queryClient.invalidateQueries({ queryKey: ['villagePosts', communityId] });
       }
+      queryClient.invalidateQueries({ queryKey: ['userBadges'] });
     }
   });
 };

@@ -1,8 +1,10 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchAPI } from './api';
 import { toast } from 'sonner';
 
 export const useSubmitFeedback = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ type, message, name, email }: { type: string; message: string; name?: string; email?: string }) => {
       const res = await fetchAPI('/api/feedback', {
@@ -12,6 +14,7 @@ export const useSubmitFeedback = () => {
       return res;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userBadges'] });
       toast.success('Thank you for your feedback!');
     },
     onError: () => {

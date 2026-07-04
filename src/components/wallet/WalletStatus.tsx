@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useWallet } from '@meshsdk/react';
 import { Wallet, AlertCircle, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { useModals } from '@/contexts/modals-context';
@@ -37,12 +37,16 @@ export function WalletStatus({ className = '' }: WalletStatusProps) {
   const [networkWarning, setNetworkWarning] = useState(false);
   const { openModal } = useModals();
   const [address, setAddress] = useState<string | null>(null);
+  const hasAttemptedConnection = useRef(false);
 
   useEffect(() => {
     // Auto-connect if a wallet was previously connected
     const persistedWallet = localStorage.getItem('mosaic_connected_wallet');
-    if (persistedWallet && !connected && !connecting) {
-      connect(persistedWallet);
+    if (persistedWallet && !connected && !connecting && !hasAttemptedConnection.current) {
+      hasAttemptedConnection.current = true;
+      connect(persistedWallet).catch(() => {
+        // user closed the popup or connection failed
+      });
     }
   }, [connected, connecting, connect]);
 
