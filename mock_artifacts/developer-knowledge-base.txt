@@ -1,0 +1,29 @@
+# Developer Knowledge Base: Backend Guild
+
+## 1. Getting Started
+Welcome to the Backend Guild's Developer Knowledge Base. This repository contains our technical documentation, coding standards, onboarding guides, and architectural decisions. To set up your local development environment, please follow the steps outlined in the `README.md` of our primary monorepo. Ensure you have Docker and Node.js v20+ installed.
+
+## 2. Architecture Overview
+Our system is built on a microservices architecture utilizing Node.js and Go.
+- **API Gateway:** Handles authentication, rate limiting, and request routing.
+- **Auth Service:** Manages user identities and JWT issuance.
+- **Data Layer:** We use PostgreSQL for relational data and Redis for caching and session management.
+- **Event Bus:** Asynchronous communication between services is handled via Apache Kafka.
+
+## 3. Coding Standards
+- We strictly enforce TypeScript strict mode across all Node.js projects.
+- Use ESLint and Prettier for code formatting. Pre-commit hooks are configured to prevent unformatted code from being pushed.
+- All new features must include unit tests. Our target test coverage is 80%.
+- Document all public APIs using OpenAPI (Swagger) specifications.
+
+## 4. API Conventions
+- We follow RESTful principles for standard CRUD operations.
+- For complex queries or aggregating data from multiple services, utilize our GraphQL endpoint.
+- All API responses must follow our standardized JSON envelope structure: `{ "data": {}, "error": null, "meta": {} }`.
+- Version all APIs in the URL path (e.g., `/api/v1/users`).
+
+## 5. Deployment Process
+We use GitHub Actions for our CI/CD pipeline.
+1. **Pull Requests:** Must pass all automated tests and receive at least one code review approval from a Core Maintainer.
+2. **Staging:** Merging to the `develop` branch automatically deploys the application to the staging environment.
+3. **Production:** Releases are triggered manually by tagging a commit on the `main` branch with a semantic version number (e.g., `v1.2.0`). Deployments to production require zero downtime.

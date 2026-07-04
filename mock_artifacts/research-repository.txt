@@ -1,0 +1,27 @@
+# Research Repository: Green Energy Lab
+
+## 1. Abstract
+The Green Energy Lab Research Repository is a centralized collection of research notes, datasets, experiment results, and peer-reviewed findings regarding renewable energy technologies. All contributions maintain a transparent history to ensure reproducibility and foster open scientific collaboration.
+
+## 2. Current Focus Areas
+Our current research initiatives are divided into three primary categories:
+- **Solar Photovoltaics:** Enhancing the efficiency of perovskite solar cells under high-temperature conditions.
+- **Wind Turbine Aerodynamics:** Analyzing blade wear and tear in offshore environments using predictive modeling.
+- **Energy Storage:** Developing solid-state battery prototypes with increased energy density and reduced degradation over time.
+
+## 3. Datasets and Experiment Logs
+All raw datasets and experiment logs are stored in the `/data` directory. 
+- **Data Formatting:** Ensure all CSV files use UTF-8 encoding. Time-series data must follow the ISO 8601 standard format.
+- **Logging Protocols:** Every experiment must be documented using the standard `Experiment_Log_Template.md`. Include the hypothesis, methodology, control variables, and preliminary results.
+- **Version Control:** Datasets are versioned. Do not overwrite existing data files; instead, append a version number (e.g., `solar_irradiance_v2.csv`) and update the `changelog.txt`.
+
+## 4. Findings & Publications
+Completed research ready for peer review should be submitted to the `publications` directory.
+- Drafts should be formatted using our LaTeX template or as standard Markdown files with mathematical formulas enclosed in LaTeX syntax (`$$...$$`).
+- All community members are encouraged to review open drafts and provide constructive feedback via pull requests.
+
+## 5. How to Contribute Data
+We welcome contributions from independent researchers and institutions. To contribute data:
+1. Ensure your data collection methods adhere to our ethical and environmental guidelines.
+2. Clean your data and format it according to our standards outlined in Section 3.
+3. Open a pull request with a detailed description of the dataset, collection methodology, and any potential biases or limitations.

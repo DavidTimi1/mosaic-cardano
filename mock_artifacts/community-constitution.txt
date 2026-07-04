@@ -1,0 +1,26 @@
+# Community Constitution: Open Builders
+
+## 1. Preamble
+Welcome to Open Builders! This living constitution defines the principles, membership criteria, voting rules, and decision-making processes for our community. We are dedicated to fostering an inclusive, transparent, and collaborative environment where every builder has a voice.
+
+## 2. Membership
+Membership is open to anyone who shares our vision of open-source collaboration. 
+- **Contributors:** Individuals who have made at least one recognized contribution (code, documentation, design, etc.).
+- **Core Members:** Active contributors who have sustained participation for over 3 months and have been nominated by existing Core Members.
+- **Stewards:** Elected leaders responsible for administrative tasks and treasury management.
+
+## 3. Governance & Voting
+Our decision-making process is designed to be democratic and transparent:
+- **Proposals:** Any Core Member can submit a proposal. Proposals must remain open for discussion for at least 7 days.
+- **Voting Mechanism:** We use token-weighted voting, capped to prevent concentration of power. 1 Member = 1 Base Vote, plus fractional weight based on contribution history.
+- **Quorum:** A minimum of 20% of active Core Members must participate for a vote to be valid.
+- **Approval:** A simple majority (>50%) is required for standard proposals. Changes to this Constitution require a supermajority (66%).
+
+## 4. Treasury Management
+Funds held in the community treasury are strictly used for collective benefit. All expenditures over 500 SCR require a formal proposal and community vote. Routine operational costs are managed by Stewards with monthly transparency reports.
+
+## 5. Code of Conduct
+We are committed to providing a harassment-free experience for everyone. Disagreements should be handled respectfully. Harassment, discrimination, or abusive behavior will result in immediate review by the Stewards and potential expulsion from the community.
+
+## 6. Amendments
+This Constitution is a living document. Amendments can be proposed by any Core Member and require a 66% supermajority vote to be adopted.
