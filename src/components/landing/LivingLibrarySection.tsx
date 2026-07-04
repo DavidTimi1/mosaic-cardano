@@ -4,10 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, BookOpen } from 'lucide-react';
 import { Button } from '../ui/button';
 import { TexturedCard } from '../ui/textured-card';
-import { useGetFeaturedArtifacts } from '@/services/villages';
+import { useGetFeaturedPieces } from '@/services/pieces';
+import Link from 'next/link';
+import { ROUTES } from '@/lib/routes';
 
 export const LivingLibrarySection = () => {
-  const { data: featuredArtifacts, isLoading: isLoadingArtifacts } = useGetFeaturedArtifacts();
+  const { data: featuredArtifacts, isLoading: isLoadingArtifacts } = useGetFeaturedPieces();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -62,9 +64,11 @@ export const LivingLibrarySection = () => {
                   <p className="font-sans text-theme-on-surface/80 leading-relaxed mb-8 z-10 line-clamp-4">
                     {featuredArtifacts[activeIndex].description}
                   </p>
-                  <div className="z-10 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-theme-accent mt-auto">
-                    Read Artifact <ArrowRight size={14} />
-                  </div>
+                  <Button asChild variant="link" size="none">
+                    <Link href={ROUTES.ARTIFACT(featuredArtifacts[activeIndex].id)} target='_blank' rel='noopener noreferrer'>
+                      Read Piece <ArrowRight size={14} />
+                    </Link>
+                  </Button>
                 </TexturedCard>
               </motion.div>
             </AnimatePresence>

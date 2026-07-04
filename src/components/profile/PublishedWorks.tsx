@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { BookOpen } from 'lucide-react';
 import { TexturedCard } from '../ui/textured-card';
 import type { PublishedWork } from '../../services/users';
+import { ROUTES } from '@/lib/routes';
 
 export const PublishedWorks = ({ works, isLoading }: { works?: PublishedWork[], isLoading: boolean }) => {
   if (isLoading) {
@@ -26,7 +27,7 @@ export const PublishedWorks = ({ works, isLoading }: { works?: PublishedWork[], 
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {works.map((work, i) => (
-          <Link href={`/artifact/${work.id}`} key={work.id} className="block group h-full">
+          <Link href={ROUTES.ARTIFACT(work.id)} key={work.id} className="block group h-full">
             <TexturedCard 
               patternId={((i % 5) + 1) as 1 | 2 | 3 | 4 | 5}
               patternColor="text-theme-clay"

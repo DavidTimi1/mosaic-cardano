@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import { useGetArtifactDetails, useGetDocumentRevisions, useGetArtifactAnalytics } from '@/services/projects';
+import { useGetDocumentRevisions, useGetArtifactAnalytics } from '@/services/projects';
+import { useGetPieceDetails } from '@/services/pieces';
 import AppPageContainer from '@/components/layout/AppPageContainer';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/routes';
@@ -14,11 +15,25 @@ export default function ArtifactPage() {
   const params = useParams();
   const artifactId = params.artifact_id as string;
   
-  const { data: artifact, isLoading: isArtifactLoading } = useGetArtifactDetails(artifactId);
+  const { data: piece, isLoading: isPieceLoading } = useGetPieceDetails(artifactId);
   const { data: revisions, isLoading: isRevisionsLoading } = useGetDocumentRevisions(artifactId);
   const { data: analytics, isLoading: isAnalyticsLoading } = useGetArtifactAnalytics(artifactId);
+
+  const [content, setContent] = React.useState<string | null>(null);
+  const [isContentLoading, setIsContentLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (piece?.contentUrl) {
+      setIsContentLoading(true);
+      fetch(piece.contentUrl)
+        .then(res => res.text())
+        .then(text => setContent(text))
+        .catch(err => console.error("Failed to load piece content:", err))
+        .finally(() => setIsContentLoading(false));
+    }
+  }, [piece?.contentUrl]);
   
-  if (isArtifactLoading) {
+  if (isPieceLoading) {
     return (
       <AppPageContainer title="Loading Artifact...">
         <div className="animate-pulse space-y-8 max-w-3xl">
@@ -30,10 +45,10 @@ export default function ArtifactPage() {
     );
   }
   
-  if (!artifact) {
+  if (!piece) {
     return (
-      <AppPageContainer title="Artifact Not Found">
-        <p className="text-theme-on-surface/60 font-serif text-xl">This artifact does not exist or has been removed from the archives.</p>
+      <AppPageContainer title="Piece Not Found">
+        <p className="text-theme-on-surface/60 font-serif text-xl">This piece does not exist or has been removed from the archives.</p>
       </AppPageContainer>
     );
   }
@@ -42,9 +57,9 @@ export default function ArtifactPage() {
     <AppPageContainer className="max-w-6xl">
       <div className="mb-2 border-b border-theme-outline/20 pb-4">
         <Button asChild variant="link" size="sm" className="pl-0 text-theme-on-surface/60 hover:text-theme-forest font-sans uppercase tracking-widest text-[10px] font-bold">
-          <Link href={ROUTES.VILLAGE.PROJECT(artifact.communityId, artifact.projectId)}>
+          <Link href={ROUTES.VILLAGE.HOME(piece.community.id)}>
             <ChevronLeft size={14} className="mr-1" />
-            Project: {artifact.projectTitle}
+            Community: {piece.community.name}
           </Link>
         </Button>
       </div>
@@ -55,41 +70,39 @@ export default function ArtifactPage() {
           
           <header className="space-y-6">
             <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-theme-forest leading-tight">
-              {artifact.title}
+              {piece.title}
             </h1>
             
             <div className="flex flex-wrap items-center gap-4 border-y border-theme-outline/20 py-4">
               <div className="flex -space-x-2 mr-2">
-                {artifact.authors.map(author => (
-                  <div key={author.id} className="w-10 h-10 rounded-full border-2 border-theme-parchment bg-theme-clay flex items-center justify-center text-xs font-bold text-white shadow-sm" title={`${author.name} - ${author.attributionPercentage}% contribution`}>
-                    {author.initials}
-                  </div>
-                ))}
+                <div key={piece.author.id} className="w-10 h-10 rounded-full border-2 border-theme-parchment bg-theme-clay flex items-center justify-center text-xs font-bold text-white shadow-sm" title={piece.author.name}>
+                  {piece.author.name.substring(0, 2).toUpperCase()}
+                </div>
               </div>
               <div className="text-sm text-theme-on-surface/70">
                 <span className="block font-bold text-theme-forest">
-                  {artifact.authors.map(a => a.name).join(', ')}
+                  {piece.author.name}
                 </span>
                 <span className="font-mono text-[10px] uppercase tracking-widest text-theme-on-surface/50">Verified Authorship</span>
               </div>
             </div>
             <div className="font-mono text-xs text-theme-on-surface/50 uppercase tracking-widest">
-              Published {artifact.updatedAt} • Sealed in Library of Memory
+              Published {new Date(piece.createdAt).toLocaleDateString()} • Sealed in Library of Memory
             </div>
           </header>
 
           <article className="prose prose-stone max-w-none font-serif text-lg leading-relaxed text-theme-forest/90">
-            {artifact.content ? (
-              <div dangerouslySetInnerHTML={{ __html: artifact.content }} />
+            {isContentLoading ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-4 bg-theme-outline/10 rounded w-full"></div>
+                <div className="h-4 bg-theme-outline/10 rounded w-5/6"></div>
+                <div className="h-4 bg-theme-outline/10 rounded w-4/6"></div>
+              </div>
+            ) : content ? (
+              <div className="whitespace-pre-wrap font-sans text-base leading-loose">{content}</div>
             ) : (
-              <div className="space-y-6 text-theme-on-surface/70">
-                <p>The manuscript begins by outlining the oral lineages of the ancient empires, tracing the paths of the river merchants and storytellers.</p>
-                <p>We see a remarkable convergence of language dialects in the northern basin, suggesting a period of intense cultural exchange around the 14th century. The rhythmic patterns of the recorded chants share a striking similarity with the poetry of the eastern plains.</p>
-                <p>Further analysis of the field recordings indicates that these stories were not merely historical accounts, but living legal documents, recited to resolve land disputes and forge alliances between neighboring communities.</p>
-                <div className="p-6 bg-theme-surface-low border-l-4 border-theme-clay italic my-8 text-base">
-                  &quot;The river remembers what the land forgets. The stories of our fathers flow not in water, but in the breath of those who remain.&quot;
-                </div>
-                <p>This draft serves as the foundational translation for the upcoming anthology, preserving the exact cadence and tonality originally captured during the initial expeditions.</p>
+              <div className="p-6 bg-theme-surface-low border border-theme-outline/10 rounded-xl text-center text-theme-on-surface/60">
+                Content is not available.
               </div>
             )}
           </article>
@@ -98,10 +111,10 @@ export default function ArtifactPage() {
         {/* Right Column: Metadata, Analytics, Revision History */}
         <div className="space-y-8">
           
-          {/* Artifact Analytics */}
+          {/* Piece Analytics */}
           <TexturedCard patternId={3} className="bg-theme-parchment rounded-2xl p-6 border border-theme-outline/20 shadow-sm">
             <h3 className="font-sans uppercase tracking-widest text-xs font-bold text-theme-accent mb-6 flex items-center gap-2">
-              <BarChart3 size={16} /> Artifact Analytics
+              <BarChart3 size={16} /> Piece Analytics
             </h3>
             
             {isAnalyticsLoading || !analytics ? (
@@ -163,7 +176,7 @@ export default function ArtifactPage() {
                 <div className="relative">
                    <span className="absolute -left-5 top-1.5 w-2 h-2 rounded-full bg-green-500 ring-4 ring-theme-surface-low"></span>
                    <p className="font-mono text-[10px] text-theme-on-surface/50 mb-1">Genesis</p>
-                   <h4 className="font-bold text-sm text-theme-forest">Artifact Sealed</h4>
+                   <h4 className="font-bold text-sm text-theme-forest">Piece Sealed</h4>
                    <p className="text-xs text-theme-on-surface/70 mt-1">Cryptographically signed by contributors.</p>
                 </div>
                 {revisions?.map((rev) => (

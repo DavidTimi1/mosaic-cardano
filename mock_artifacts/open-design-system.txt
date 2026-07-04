@@ -1,0 +1,31 @@
+# Open Design System: Pixel Collective
+
+## 1. Introduction
+The Open Design System is a shared library of UI components, branding guidelines, and reusable assets contributed by designers across the Pixel Collective. Our goal is to maintain visual consistency while accelerating the development process for all community projects.
+
+## 2. Design Principles
+- **Clarity over Cleverness:** Interfaces should be intuitive and straightforward.
+- **Accessible by Default:** Design for all users, regardless of ability or device.
+- **Modular and Composable:** Build small, reusable components that can be combined to create complex layouts.
+
+## 3. Brand Guidelines
+- **Typography:** We use *Inter* for all UI elements and *Merriweather* for long-form editorial content. Base font size is 16px.
+- **Color Palette:** 
+  - Primary: Midnight Blue (#0F172A)
+  - Secondary: Coral (#FF7F50)
+  - Background: Off-White (#F8FAFC)
+  - Text: Slate (#334155)
+- **Spacing:** We utilize an 8pt grid system. All margins and padding should be multiples of 8 (8, 16, 24, 32, etc.).
+
+## 4. UI Components
+- **Buttons:** Available in Primary, Secondary, and Ghost variants. Always include interactive states (hover, active, disabled).
+- **Forms:** Input fields must have clear labels and accessible error states. Use inline validation where possible.
+- **Navigation:** Maintain a consistent header height of 64px. Mobile navigation should utilize a slide-out drawer rather than a dropdown.
+
+## 5. Accessibility Standards
+- All color combinations must meet WCAG 2.1 AA contrast ratios (minimum 4.5:1 for normal text).
+- Interactive elements must have a minimum touch target size of 44x44 pixels.
+- Ensure all non-text content has appropriate alternative text (alt tags).
+
+## 6. Contribution Guide
+To propose a new component or modify an existing one, please submit a design file via our community Figma workspace. All submissions will be reviewed by the Core Design Team during our weekly critique sessions.

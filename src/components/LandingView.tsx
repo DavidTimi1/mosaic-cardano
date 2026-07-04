@@ -6,24 +6,21 @@ import Link from 'next/link';
 import MosaicBrand from './ui/icons/MosaicBrand';
 import { MOSAIC_EASE } from '../lib/data';
 import Footer from './layout/Footer';
-import { useModals } from '@/contexts/modals-context';
-import { MODALS } from '@/lib/modals';
 
 // Extracted Components
 import { HeroSection } from './landing/HeroSection';
 import { PhilosophySection } from './landing/PhilosophySection';
-import { CommunityShowcaseSection } from './landing/CommunityShowcaseSection';
 import { LivingLibrarySection } from './landing/LivingLibrarySection';
 import { TrustSection } from './landing/TrustSection';
 import { CTASection } from './landing/CTASection';
 import { PricingSection } from './landing/PricingSection';
-import { Button } from './ui/button';
+import { FloatingFeedbackButton } from './layout/FloatingFeddbackButton';
+import { CommunityShowcaseSection } from './landing/CommunityShowcaseSection';
 
 export default function LandingView() {
-  const { openModal } = useModals();
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
       transition: { staggerChildren: 0.2, ease: MOSAIC_EASE }
     }
@@ -46,9 +43,6 @@ export default function LandingView() {
             <MosaicBrand size="medium" />
           </div>
           <div className="flex items-center gap-6">
-            <Button variant="link" onClick={() => openModal(MODALS.FEEDBACK)} className="text-theme-forest/60 hover:text-theme-forest">
-              SUPPORT & FEEDBACK
-            </Button>
             <Link href="/auth" className="font-sans text-xs uppercase tracking-widest font-bold text-theme-accent hover:text-theme-forest transition-colors">
               Sign In
             </Link>
@@ -82,6 +76,8 @@ export default function LandingView() {
 
       {/* 7. CTA Section */}
       <CTASection containerVariants={containerVariants} itemVariants={itemVariants} />
+
+      <FloatingFeedbackButton />
 
       {/* 7. Footer */}
       <Footer />

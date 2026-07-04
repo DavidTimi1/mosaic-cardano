@@ -117,7 +117,7 @@ export default function PublishingModal({
             <div className="space-y-6 animate-in fade-in slide-in-from-right-8">
               <div>
                 <h3 className="font-bold text-lg mb-1">Treasury Split</h3>
-                <p className="text-sm text-theme-on-surface/70 mb-4">Allocate how future rewards or donations for this artifact are distributed.</p>
+                <p className="text-sm text-theme-on-surface/70 mb-4">Allocate how future rewards or donations for this piece are distributed.</p>
               </div>
               <div className="bg-white p-5 rounded-xl border border-theme-outline/20 space-y-4">
                 <div className="flex items-center justify-between p-3 bg-theme-surface-low rounded border border-theme-outline/10">
@@ -155,7 +155,7 @@ export default function PublishingModal({
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-2">
                 <CheckCircle size={40} />
               </div>
-              <h3 className="font-serif text-3xl text-theme-forest">Artifact Sealed</h3>
+              <h3 className="font-serif text-3xl text-theme-forest">Piece Sealed</h3>
               <p className="text-sm text-theme-on-surface/70 max-w-sm">
                 &quot; Songhai Lineage Translation Draft &quot; has been successfully published to the Library of Memory.
               </p>
