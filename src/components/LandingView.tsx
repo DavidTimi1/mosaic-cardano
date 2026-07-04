@@ -10,12 +10,12 @@ import Footer from './layout/Footer';
 // Extracted Components
 import { HeroSection } from './landing/HeroSection';
 import { PhilosophySection } from './landing/PhilosophySection';
-import { CommunityShowcaseSection } from './landing/CommunityShowcaseSection';
 import { LivingLibrarySection } from './landing/LivingLibrarySection';
 import { TrustSection } from './landing/TrustSection';
 import { CTASection } from './landing/CTASection';
 import { PricingSection } from './landing/PricingSection';
 import { FloatingFeedbackButton } from './layout/FloatingFeddbackButton';
+import { CommunityShowcaseSection } from './landing/CommunityShowcaseSection';
 
 export default function LandingView() {
   const containerVariants = {
@@ -32,7 +32,6 @@ export default function LandingView() {
   };
 
   return (
-    <>
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, filter: 'blur(10px)' }} transition={{ duration: 1.2, ease: MOSAIC_EASE }} className="relative z-10 w-full bg-theme-parchment text-theme-forest overflow-x-hidden">
       
       {/* Background Texture Overlay */}
@@ -84,6 +83,5 @@ export default function LandingView() {
       <Footer />
 
     </motion.div>
-      </>
   );
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { GitMergeIcon, FileTextIcon, CheckCircle2Icon } from 'lucide-react';
 import type { Contribution } from '../../services/users';
+import { ROUTES } from '@/lib/routes';
 
 export const ContributionRecord = ({ contributions, isLoading }: { contributions?: Contribution[], isLoading: boolean }) => {
   if (isLoading) {
@@ -44,7 +45,7 @@ export const ContributionRecord = ({ contributions, isLoading }: { contributions
                   {getIcon(item.action)}
                   <span className="font-bold text-sm uppercase tracking-widest text-theme-forest">{item.action}</span>
                   <span className="text-theme-on-surface/40 text-sm">on</span>
-                  <Link href={`/artifact/${item.id}`} className="font-serif font-bold text-theme-forest hover:text-theme-clay hover:underline decoration-theme-clay/30 transition-all">{item.target}</Link>
+                  <Link href={ROUTES.ARTIFACT(item.id)} className="font-serif font-bold text-theme-forest hover:text-theme-clay hover:underline decoration-theme-clay/30 transition-all">{item.target}</Link>
                 </div>
                 <span className="text-xs font-mono text-theme-on-surface/50 uppercase tracking-widest">{item.date}</span>
               </div>

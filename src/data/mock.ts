@@ -11,7 +11,7 @@ export const MOCK_HOME_ACTION_ITEMS = [
   {
     id: 'a2',
     type: 'PROJECT_UPDATE',
-    title: 'Pending Artifact Review',
+    title: 'Pending Piece Review',
     description: 'Amina D. requested your review on "Chapter 4: The Savannah Routes".',
     timestamp: Date.now() - 5 * 60 * 60 * 1000,
     source: 'PROJECT_UPDATE',
