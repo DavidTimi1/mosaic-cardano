@@ -16,14 +16,19 @@ import Image from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import Typography from '@tiptap/extension-typography';
 import { useCreateDocument, useUpdateDocument } from '@/services/documents';
-import { saveLocalDocument } from '@/lib/indexeddb';
+import { saveLocalDocument, getLocalDocuments } from '@/lib/indexeddb';
+import { DocumentDetails } from '@/types/mosaic';
 
 export default function StudioEditor({ 
   setPublishStep,
-  documentId
+  documentId,
+  document,
+  isContentLoading
 }: { 
   setPublishStep: (val: 'draft') => void,
   documentId: string | null,
+  document?: DocumentDetails | null,
+  isContentLoading?: boolean
 }) {
   const { mutateAsync: createDocument, isPending: isCreating } = useCreateDocument();
   const { mutateAsync: updateDocument, isPending: isUpdating } = useUpdateDocument();
@@ -56,11 +61,7 @@ export default function StudioEditor({
       }),
       Typography,
     ],
-    content: documentId ? `
-      <p>The translation of the Songhai lineage records requires a careful balance between literal meaning and poetic rhythm.</p>
-      <p>The original chants were performed by the Griots during the harvest festival, accompanied by the slow beating of the talking drum.</p>
-      <blockquote>"The river does not forget its source, nor does the tree forget its roots."</blockquote>
-    ` : '',
+    content: document?.contentRaw || '',
     editorProps: {
       attributes: {
         class: 'prose prose-theme font-serif text-lg leading-loose text-theme-on-surface/90 outline-none min-h-[60vh] max-w-none pb-32',
@@ -69,10 +70,34 @@ export default function StudioEditor({
   });
 
   useEffect(() => {
-    if (documentId) {
-      setTitle('Songhai Lineage Translation Draft');
+    async function loadContent() {
+      if (!document || !editor) return;
+      setTitle(document.title);
+      
+      let initialContent = document.contentRaw || '';
+
+      if (documentId) {
+        try {
+          const localDocs = await getLocalDocuments();
+          const localDoc = localDocs.find(d => d.id === documentId);
+          // If local document was accessed/saved after the server version was last updated
+          if (localDoc && localDoc.content && localDoc.lastAccessed > document.updatedAt) {
+            initialContent = localDoc.content;
+            setLastSaved(new Date(localDoc.lastAccessed));
+            console.log("Loaded newer draft from local IndexedDB");
+          }
+        } catch (e) {
+          console.warn("Failed to check local documents", e);
+        }
+      }
+
+      // Wait for editor to be ready and sync content
+      if (editor.getHTML() === '<p></p>' && initialContent) {
+        editor.commands.setContent(initialContent);
+      }
     }
-  }, [documentId]);
+    loadContent();
+  }, [document, editor, documentId]);
 
   const handleSave = async () => {
     if (!editor) return;
@@ -89,7 +114,7 @@ export default function StudioEditor({
       } else {
         await updateDocument({
           documentId: currentPieceId,
-          updates: { title: title || 'Untitled Draft', content: editor.getHTML() }
+          updates: { title: title || 'Untitled Draft', contentRaw: editor.getHTML() }
         });
       }
       
@@ -101,6 +126,7 @@ export default function StudioEditor({
           id: savedId,
           title: title || 'Untitled Draft',
           contentSnippet: editor.getText().slice(0, 100),
+          content: editor.getHTML(),
           lastAccessed: Date.now(),
         });
       }
@@ -132,9 +158,7 @@ export default function StudioEditor({
 
   const isEditorDisabled = isSaving;
 
-  if (!editor) {
-    return <div className="flex-1 flex items-center justify-center"><Loader2 className="animate-spin text-theme-accent" /></div>;
-  }
+  // Removed early return to show header while loading
 
   return (
     <main className="flex-1 flex flex-col h-full bg-theme-surface relative">
@@ -224,19 +248,24 @@ export default function StudioEditor({
       {/* Editor Content Area */}
       <div className={`flex-1 overflow-y-auto relative ${isEditorDisabled ? 'opacity-70 pointer-events-none' : ''}`}>
         <div className="max-w-[700px] mx-auto px-6 py-12 lg:py-16">
-          
-          <div className="tiptap-wrapper">
-            <EditorContent editor={editor} />
-          </div>
-
+          {(!editor || isContentLoading) ? (
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="animate-spin text-theme-accent opacity-50" size={32} />
+            </div>
+          ) : (
+            <div className="tiptap-wrapper">
+              <EditorContent editor={editor} />
+            </div>
+          )}
         </div>
       </div>
       
-      {/* Footer Info */}
-      <div className="absolute bottom-6 right-6 flex items-center gap-4 text-[10px] uppercase tracking-widest font-bold text-theme-on-surface/40 pointer-events-none">
-        <span>{editor.storage.characterCount.words()} words</span>
-        <span>{editor.storage.characterCount.characters()} chars</span>
-      </div>
+      {editor && (
+        <div className="absolute bottom-6 right-6 flex items-center gap-4 text-[10px] uppercase tracking-widest font-bold text-theme-on-surface/40 pointer-events-none">
+          <span>{editor.storage.characterCount.words()} words</span>
+          <span>{editor.storage.characterCount.characters()} chars</span>
+        </div>
+      )}
 
       {/* Tiptap Styles to hide generic outlines, handle placeholder, and match theme */}
       <style dangerouslySetInnerHTML={{__html: `
