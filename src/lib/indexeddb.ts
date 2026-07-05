@@ -6,6 +6,7 @@ export interface LocalDocument {
   id: string;
   title: string;
   contentSnippet: string;
+  content?: string;
   lastAccessed: number;
 }
 
