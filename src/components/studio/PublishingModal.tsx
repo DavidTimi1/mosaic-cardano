@@ -316,7 +316,7 @@ export default function PublishingModal({
               </div>
               <h3 className="font-serif text-3xl text-theme-forest">Piece Sealed</h3>
               <p className="text-sm text-theme-on-surface/70 max-w-sm">
-                &quot; {document.title || 'Untitled Draft'} &quot; has been successfully published to the Library of Memory.
+                &quot; {document.title || 'Untitled Draft'} &quot; has been successfully anchored on-chain and published to the Community Library.
               </p>
               <div className="bg-theme-surface-low p-3 rounded border border-theme-outline/20 w-full font-mono text-xs text-theme-on-surface/50 truncate select-all">
                 Piece ID: {pieceId || 'Unknown'}
