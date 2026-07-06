@@ -14,7 +14,7 @@ export const pieceService = {
   async getFeaturedPieces(limit = 5): Promise<FeaturedPiece[]> {
     const query = `
       MATCH (p:Mosaic_Piece)
-      OPTIONAL MATCH (c:Mosaic_Community)-[:PUBLISHED_IN]->(p)
+      OPTIONAL MATCH (p)-[:PUBLISHED_IN]->(c:Mosaic_Community)
       OPTIONAL MATCH (p)-[:HAS_CONTRIBUTION]->(contrib:Mosaic_Contribution)-[:MADE_BY]->(a:Mosaic_User)
       // Fallback for older pieces
       OPTIONAL MATCH (legacyAuthor:Mosaic_User)-[:AUTHORED]->(p)
@@ -39,7 +39,7 @@ export const pieceService = {
       MATCH (p:Mosaic_Piece {id: $id})
       OPTIONAL MATCH (p)-[:HAS_CONTRIBUTION]->(c:Mosaic_Contribution)-[:MADE_BY]->(u:Mosaic_User)
       OPTIONAL MATCH (legacyAuthor:Mosaic_User)-[:AUTHORED]->(p)
-      OPTIONAL MATCH (community:Mosaic_Community)-[:PUBLISHED_IN]->(p)
+      OPTIONAL MATCH (p)-[:PUBLISHED_IN]->(community:Mosaic_Community)
       RETURN p, community, legacyAuthor, collect({
         userId: u.id,
         name: u.displayName,
@@ -91,7 +91,7 @@ export const pieceService = {
     }
 
     const query = `
-      MATCH (community:Mosaic_Community {id: $communityId})-[:PUBLISHED_IN]->(p:Mosaic_Piece)
+      MATCH (p:Mosaic_Piece)-[:PUBLISHED_IN]->(community:Mosaic_Community {id: $communityId})
       WHERE 1=1 ${typeFilter}
       OPTIONAL MATCH (p)-[:HAS_CONTRIBUTION]->(c:Mosaic_Contribution)-[:MADE_BY]->(u:Mosaic_User)
       OPTIONAL MATCH (legacyAuthor:Mosaic_User)-[:AUTHORED]->(p)

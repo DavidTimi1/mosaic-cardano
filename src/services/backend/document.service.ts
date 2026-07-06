@@ -15,6 +15,7 @@ export const documentService = {
         createdAt: timestamp(),
         updatedAt: timestamp(),
         status: 'Draft',
+        publishStage: 'draft',
         contentType: 'Publication'
       })
       CREATE (p)-[:CREATED_BY]->(u)
@@ -38,35 +39,57 @@ export const documentService = {
     return rows[0];
   },
 
-  async updateDocument(id: string, userId: string, updates: Partial<DocumentDetails>): Promise<void> {
+  async updateDocument(documentId: string, userId: string, updates: Partial<DocumentDetails>): Promise<void> {
+    const doc = await this.getDocument(documentId, userId);
+    if (!doc) throw new Error('Document not found or unauthorized');
+
+    // Block content edits if frozen
+    const isFrozen = ['propose', 'waiting', 'mint', 'success'].includes(doc.publishStage || '');
+    const isTryingToEditContent = updates.title !== undefined || updates.contentRaw !== undefined;
+    
+    if (isFrozen && isTryingToEditContent) {
+      throw new Error('Document content is frozen and cannot be edited during publishing');
+    }
+
     const setClauses: string[] = [];
-    const params: Record<string, unknown> = { id, userId };
+    const params: Record<string, unknown> = { id: documentId, userId };
 
     if (updates.title) {
       setClauses.push('p.title = $title');
       params.title = updates.title;
     }
-    if (updates.contentRaw !== undefined) {
-      const contentUrl = await uploadTextToCloudinary(updates.contentRaw, id);
-      setClauses.push('p.contentUrl = $contentUrl');
+    if (updates.contentRaw) {
+      const contentUrl = await uploadTextToCloudinary(updates.contentRaw, documentId);
+      setClauses.push('p.contentRaw = $contentRaw, p.contentUrl = $contentUrl');
+      params.contentRaw = updates.contentRaw;
       params.contentUrl = contentUrl;
     }
     if (updates.status) {
       setClauses.push('p.status = $status');
       params.status = updates.status;
     }
+    if (updates.publishStage) {
+      setClauses.push('p.publishStage = $publishStage');
+      params.publishStage = updates.publishStage;
+    }
     if (updates.ipfsHash) {
       setClauses.push('p.ipfsHash = $ipfsHash');
       params.ipfsHash = updates.ipfsHash;
+    }
+    if (updates.communityId) {
+      setClauses.push('p.communityId = $communityId');
+      params.communityId = updates.communityId;
     }
 
     if (setClauses.length === 0) return;
 
     setClauses.push('p.updatedAt = timestamp()');
 
-    // Only the Creator can update the document details
+    // The Creator OR any invited Contributor can update the document details
     const query = `
-      MATCH (p:Mosaic_Piece {id: $id})-[:CREATED_BY]->(u:Mosaic_User {id: $userId})
+      MATCH (p:Mosaic_Piece {id: $id})
+      WHERE (p)-[:CREATED_BY]->(:Mosaic_User {id: $userId}) 
+         OR (p)-[:HAS_CONTRIBUTION]->(:Mosaic_Contribution)-[:MADE_BY]->(:Mosaic_User {id: $userId})
       SET ${setClauses.join(', ')}
       RETURN p.id
     `;
@@ -102,7 +125,7 @@ export const documentService = {
     const rows = await runRead(query, { id, userId }, (row) => {
       const p = row.p as Record<string, unknown>;
       if (!p) return null;
-      
+
       const creator = row.creator as Record<string, unknown>;
       const contributions = row.contributions as Record<string, unknown>[];
 
@@ -116,6 +139,8 @@ export const documentService = {
         createdAt: p.createdAt as number,
         updatedAt: p.updatedAt as number,
         status: p.status as string,
+        communityId: p.communityId as string,
+        publishStage: p.publishStage as import('@/types/mosaic').PublishStep,
         ipfsHash: p.ipfsHash as string,
         creator: {
           id: creator.id as string,
@@ -148,7 +173,9 @@ export const documentService = {
         contentUrl: (p.contentUrl as string) || '',
         createdAt: p.createdAt as number,
         updatedAt: p.updatedAt as number,
-        status: p.status as string
+        status: p.status as string,
+        communityId: p.communityId as string,
+        publishStage: p.publishStage as import('@/types/mosaic').PublishStep
       };
     });
   },
@@ -183,7 +210,8 @@ export const documentService = {
     // 3. Set Piece status to 'Proposed'
     const query = `
       MATCH (p:Mosaic_Piece {id: $documentId})-[:CREATED_BY]->(creator:Mosaic_User {id: $creatorId})
-      SET p.status = 'Proposed'
+      SET p.status = 'Proposed',
+          p.publishStage = 'waiting'
       WITH p
       UNWIND $splits AS split
       MATCH (p)-[:HAS_CONTRIBUTION]->(c:Mosaic_Contribution)-[:MADE_BY]->(u:Mosaic_User {id: split.userId})
@@ -232,7 +260,7 @@ export const documentService = {
       MATCH (p:Mosaic_Piece {id: $documentId})
       MATCH (c:Mosaic_Community {id: $communityId})
       SET p.status = 'Published'
-      MERGE (c)-[:PUBLISHED_IN]->(p)
+      MERGE (p)-[:PUBLISHED_IN]->(c)
       RETURN p.id AS id
     `;
 
