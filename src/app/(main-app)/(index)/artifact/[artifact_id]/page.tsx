@@ -87,7 +87,7 @@ export default function ArtifactPage() {
               </div>
             </div>
             <div className="font-mono text-xs text-theme-on-surface/50 uppercase tracking-widest">
-              Published {new Date(piece.createdAt).toLocaleDateString()} • Sealed in Library of Memory
+              Published {new Date(piece.createdAt).toLocaleDateString()} • Anchored On-Chain & Sealed in Community Library
             </div>
           </header>
 

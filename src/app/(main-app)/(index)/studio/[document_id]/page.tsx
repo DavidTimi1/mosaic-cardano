@@ -6,12 +6,13 @@ import { useGetMyVillages } from '@/services/villages';
 
 import StudioEditor from '@/components/studio/StudioEditor';
 import StudioSidebarRight from '@/components/studio/StudioSidebarRight';
-import PublishingModal, { PublishStep } from '@/components/studio/PublishingModal';
+import PublishingModal from '@/components/studio/PublishingModal';
+import { PublishStep } from '@/types/mosaic';
 
 export default function StudioPage({ params }: { params: { document_id: string } }) {
   const documentId = params.document_id;
   
-  const { data: document, isLoading: isDocumentLoading } = useGetDocumentDetails(documentId);
+  const { document, isLoading: isDocumentLoading, isContentLoading } = useGetDocumentDetails(documentId);
   const { data: myVillages } = useGetMyVillages();
   
   const [publishStep, setPublishStep] = useState<PublishStep | null>(null);
@@ -24,7 +25,7 @@ export default function StudioPage({ params }: { params: { document_id: string }
   const communities = myVillages?.map(v => ({ id: v.id, name: v.name })) || [];
 
   const nextPublishStep = async (current: PublishStep) => {
-    const steps: PublishStep[] = ['draft', 'community', 'review', 'attribution', 'revenue', 'signing', 'success'];
+    const steps: PublishStep[] = ['draft', 'community', 'propose', 'waiting', 'mint', 'success'];
     const idx = steps.indexOf(current);
     if (idx < steps.length - 1) {
       setPublishStep(steps[idx + 1]);
@@ -37,17 +38,19 @@ export default function StudioPage({ params }: { params: { document_id: string }
       <StudioEditor 
         setPublishStep={setPublishStep} 
         documentId={documentId}
+        document={document || null}
+        isContentLoading={isContentLoading}
       />
       
       <StudioSidebarRight 
         comments={[]} 
+        document={document || null}
       />
       
       <PublishingModal 
         publishStep={publishStep!} 
         setPublishStep={setPublishStep} 
-        documentId={documentId}
-        documentTitle={document?.title}
+        document={document || null}
         communities={communities}
         nextPublishStep={nextPublishStep} 
       />
