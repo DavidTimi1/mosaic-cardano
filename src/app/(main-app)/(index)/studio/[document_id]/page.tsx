@@ -6,7 +6,8 @@ import { useGetMyVillages } from '@/services/villages';
 
 import StudioEditor from '@/components/studio/StudioEditor';
 import StudioSidebarRight from '@/components/studio/StudioSidebarRight';
-import PublishingModal, { PublishStep } from '@/components/studio/PublishingModal';
+import PublishingModal from '@/components/studio/PublishingModal';
+import { PublishStep } from '@/types/mosaic';
 
 export default function StudioPage({ params }: { params: { document_id: string } }) {
   const documentId = params.document_id;

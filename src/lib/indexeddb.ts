@@ -68,3 +68,19 @@ export async function getLocalDocuments(): Promise<LocalDocument[]> {
     return [];
   }
 }
+
+export async function deleteLocalDocument(id: string): Promise<void> {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.delete(id);
+      
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch (e) {
+    console.warn('Failed to delete from local IndexedDB', e);
+  }
+}

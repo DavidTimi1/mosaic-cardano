@@ -9,6 +9,8 @@ export interface ContributionDetails {
   signatureHash?: string;
 }
 
+export type PublishStep = 'draft' | 'community' | 'freezing' | 'propose' | 'waiting' | 'mint' | 'success';
+
 export interface DocumentDetails {
   id: string;
   title: string;
@@ -16,7 +18,9 @@ export interface DocumentDetails {
   contentRaw?: string;
   createdAt: number;
   updatedAt: number;
+  communityId?: string;
   status: string;
+  publishStage?: PublishStep;
   ipfsHash?: string;
   creator?: {
     id: string;

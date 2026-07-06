@@ -39,6 +39,27 @@ export const useUpdateDocument = () => {
   });
 };
 
+export const useFreezeContent = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ documentId, communityId }: { documentId: string, communityId: string }) => {
+      const res = await fetchAPI(`/api/documents/${documentId}/freeze`, {
+        method: 'POST',
+        data: { communityId },
+      });
+      return res as { success: boolean, contentUrl: string };
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['documentDetails', variables.documentId] });
+      toast.success('Document content frozen to IPFS');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to freeze document');
+    }
+  });
+};
+
 export const usePublishDocument = () => {
   const queryClient = useQueryClient();
   
@@ -72,7 +93,7 @@ export const useInviteContributor = () => {
       });
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['document', variables.documentId] });
+      queryClient.invalidateQueries({ queryKey: ['documentDetails', variables.documentId] });
       toast.success('Contributor invited successfully');
     },
     onError: (error: Error) => {
@@ -92,7 +113,7 @@ export const useProposeSplits = () => {
       });
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['document', variables.documentId] });
+      queryClient.invalidateQueries({ queryKey: ['documentDetails', variables.documentId] });
       toast.success('Splits proposed successfully');
     },
     onError: (error: Error) => {
@@ -112,7 +133,7 @@ export const useSignContribution = () => {
       });
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['document', variables.documentId] });
+      queryClient.invalidateQueries({ queryKey: ['documentDetails', variables.documentId] });
       toast.success('Contribution signed successfully');
     },
     onError: (error: Error) => {
