@@ -15,6 +15,7 @@ import CharacterCount from '@tiptap/extension-character-count';
 import Image from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import Typography from '@tiptap/extension-typography';
+import { Markdown } from '@tiptap/markdown'
 import { useCreateDocument, useUpdateDocument } from '@/services/documents';
 import { saveLocalDocument, getLocalDocuments, deleteLocalDocument } from '@/lib/indexeddb';
 import { DocumentDetails } from '@/types/mosaic';
@@ -35,12 +36,14 @@ export default function StudioEditor({
   setPublishStep,
   documentId,
   document,
-  isContentLoading
+  isContentLoading,
+  toggleSidebar
 }: { 
   setPublishStep: (val: PublishStep) => void,
   documentId: string | null,
   document?: DocumentDetails | null,
-  isContentLoading?: boolean
+  isContentLoading?: boolean,
+  toggleSidebar?: () => void
 }) {
   const { mutateAsync: createDocument, isPending: isCreating } = useCreateDocument();
   const { mutateAsync: updateDocument, isPending: isUpdating } = useUpdateDocument();
@@ -53,6 +56,8 @@ export default function StudioEditor({
   const [title, setTitle] = useState('');
   const [currentPieceId, setCurrentPieceId] = useState<string | null>(documentId === 'new' ? null : documentId);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [wordCount, setWordCount] = useState(0);
+  const [charCount, setCharCount] = useState(0);
 
   const isFrozen = ['freezing', 'propose', 'waiting', 'mint', 'success'].includes(document?.publishStage || '');
 
@@ -78,6 +83,7 @@ export default function StudioEditor({
         HTMLAttributes: { class: 'text-theme-accent underline decoration-theme-accent/30 underline-offset-4 hover:decoration-theme-accent transition-colors' },
       }),
       Typography,
+      Markdown,
     ],
     content: document?.contentRaw || '',
     editable: !isFrozen,
@@ -87,13 +93,16 @@ export default function StudioEditor({
       },
     },
     onUpdate: async ({ editor }) => {
+      setWordCount(editor.storage.characterCount.words());
+      setCharCount(editor.storage.characterCount.characters());
+
       const targetId = currentPieceId || 'new-draft';
       try {
         await saveLocalDocument({
           id: targetId,
           title: title || 'Untitled Draft',
           contentSnippet: editor.getText().slice(0, 100),
-          content: editor.getHTML(),
+          content: editor.getMarkdown(),
           lastAccessed: Date.now(),
         });
       } catch {
@@ -132,6 +141,8 @@ export default function StudioEditor({
       // Wait for editor to be ready and sync content
       if (editor.getHTML() === '<p></p>' && initialContent) {
         editor.commands.setContent(initialContent);
+        setWordCount(editor.storage.characterCount.words());
+        setCharCount(editor.storage.characterCount.characters());
       }
     }
     loadContent();
@@ -284,9 +295,9 @@ export default function StudioEditor({
           )}
 
           {/* Save Status & Button */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {lastSaved && !isSaving && (
-              <span className="text-[10px] font-sans text-theme-on-surface/40 flex items-center gap-1">
+              <span className="hidden md:flex text-[10px] font-sans text-theme-on-surface/40 items-center gap-1">
                 <CheckCircle2 size={12} /> Saved
               </span>
             )}
@@ -310,9 +321,18 @@ export default function StudioEditor({
             }}
             disabled={!currentPieceId || isSaving}
             title={!currentPieceId ? "Please save your draft first" : (isFrozen ? "Continue Publishing" : "Publish to Library")}
-            className="bg-theme-forest text-theme-parchment px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest cursor-pointer hover:bg-theme-forest/90 transition-transform active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-theme-forest text-theme-parchment px-4 py-1.5 md:px-5 md:py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest cursor-pointer hover:bg-theme-forest/90 transition-transform active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isFrozen ? `Continue: ${document?.publishStage}` : 'Publish'}
+            {isFrozen ? `Continue: ${document?.publishStage}` : 'Publish Piece'}
+          </button>
+          
+          {/* Mobile Sidebar Toggle */}
+          <button 
+            onClick={toggleSidebar}
+            className="lg:hidden text-theme-on-surface/50 hover:text-theme-forest p-1.5 cursor-pointer rounded hover:bg-theme-outline/5"
+            title="Toggle Sidebar"
+          >
+            <MessageSquare size={18} />
           </button>
         </div>
       </div>
@@ -362,8 +382,8 @@ export default function StudioEditor({
       
       {editor && (
         <div className="absolute bottom-6 right-6 flex items-center gap-4 text-[10px] uppercase tracking-widest font-bold text-theme-on-surface/40 pointer-events-none">
-          <span>{editor.storage.characterCount.words()} words</span>
-          <span>{editor.storage.characterCount.characters()} chars</span>
+          <span>{wordCount} words</span>
+          <span>{charCount} chars</span>
         </div>
       )}
 
