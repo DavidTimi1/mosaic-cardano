@@ -15,6 +15,7 @@ import CharacterCount from '@tiptap/extension-character-count';
 import Image from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import Typography from '@tiptap/extension-typography';
+import { Markdown } from '@tiptap/markdown'
 import { useCreateDocument, useUpdateDocument } from '@/services/documents';
 import { saveLocalDocument, getLocalDocuments, deleteLocalDocument } from '@/lib/indexeddb';
 import { DocumentDetails } from '@/types/mosaic';
@@ -82,6 +83,7 @@ export default function StudioEditor({
         HTMLAttributes: { class: 'text-theme-accent underline decoration-theme-accent/30 underline-offset-4 hover:decoration-theme-accent transition-colors' },
       }),
       Typography,
+      Markdown,
     ],
     content: document?.contentRaw || '',
     editable: !isFrozen,
@@ -100,7 +102,7 @@ export default function StudioEditor({
           id: targetId,
           title: title || 'Untitled Draft',
           contentSnippet: editor.getText().slice(0, 100),
-          content: editor.getHTML(),
+          content: editor.getMarkdown(),
           lastAccessed: Date.now(),
         });
       } catch {

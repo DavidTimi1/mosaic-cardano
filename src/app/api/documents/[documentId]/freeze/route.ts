@@ -30,8 +30,8 @@ export const POST = withAuth(async (request, { params }, userId) => {
     }
 
     // Freeze raw content to IPFS directly as a Blob
-    // This allows the frontend to simply fetch(ipfsUrl) and get the raw HTML
-    const contentBlob = new Blob([doc.contentRaw || ''], { type: 'text/html' });
+    // This allows the frontend to simply fetch(ipfsUrl) and get the raw Markdown
+    const contentBlob = new Blob([doc.contentRaw || ''], { type: 'text/markdown' });
     
     const contentIpfsHash = await uploadFileToIPFS(contentBlob, `${doc.title} - Content`);
     
