@@ -14,11 +14,12 @@ interface PostComposerProps {
   communityId: string;
   replyToId?: string;
   isInline?: boolean;
+  initialContent?: string;
   onSuccessCallback?: () => void;
 }
 
-export function PostComposer({ communityId, replyToId, isInline, onSuccessCallback }: PostComposerProps) {
-  const [content, setContent] = useState('');
+export function PostComposer({ communityId, replyToId, isInline, initialContent, onSuccessCallback }: PostComposerProps) {
+  const [content, setContent] = useState(initialContent || '');
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const { data: authState } = useGetAuthState();
   const { mutate: createPost, isPending } = useCreatePost(communityId);

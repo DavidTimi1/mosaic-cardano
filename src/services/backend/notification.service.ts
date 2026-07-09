@@ -249,6 +249,16 @@ export const notificationService = {
 			body: `${memberName} just joined ${communityName}!`,
 			actionUrl: `/v/${communityId}`
 		});
+	},
+
+	async notifyBadgeEarned(userId: string, badgeName: string) {
+		return this.createNotification({
+			userId,
+			type: 'SYSTEM',
+			title: 'New Badge Unlocked!',
+			body: `You've earned the ${badgeName} badge. Click to mint it on-chain!`,
+			actionUrl: `?modal=BADGES`
+		});
 	}
 };
 
