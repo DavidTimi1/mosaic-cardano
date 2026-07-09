@@ -2,7 +2,6 @@
 
 import { useParams } from 'next/navigation';
 import { useGetVillageDetails } from '@/services/villages';
-import VillagePinnedBoard from '@/components/village/VillagePinnedBoard';
 import VillageStream from '@/components/village/VillageStream';
 import AppPageContainer from '@/components/layout/AppPageContainer';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,9 +38,6 @@ function VillageFeedPageContent() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Left Column: Pinned Board & Stream */}
         <div className="lg:col-span-8 space-y-4">
-          <section>
-            <VillagePinnedBoard />
-          </section>
 
           <section>
             <VillageStream communityId={communityId} />

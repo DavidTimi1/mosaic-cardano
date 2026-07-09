@@ -115,6 +115,14 @@ export default function CommunityPublicProfile() {
               </Button>
             )}
 
+            {villageDetails?.isMember && (
+              <Button asChild>
+                <Link href={`?modal=PROMPT&title=Invite+Member&type=text&placeholder=Enter+username`} >
+                  Invite Others
+                </Link>
+              </Button>
+            )}
+
             <Button asChild variant="outline">
               <Link href={ROUTES.VILLAGE.LIBRARY(communityId)}>
                 View Archive

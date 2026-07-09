@@ -14,7 +14,8 @@ import {
   ChevronDownIcon,
   LogInIcon,
   CrownIcon,
-  XIcon
+  XIcon,
+  PenTool
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -157,6 +158,27 @@ export default function AppSidebar() {
               <CompassIcon size={20} />
               {!isCollapsed && <span className="font-sans text-[12px] uppercase tracking-widest">Explore</span>}
               {pathname.startsWith(ROUTES.EXPLORE) && !isCollapsed && (
+                <span className="absolute right-0 w-1 h-4 bg-theme-accent rounded-full" />
+              )}
+            </Link>
+          </SidebarTooltip>
+        )}
+
+        {isAuthenticated && (
+          <SidebarTooltip label="Workspace" isCollapsed={isCollapsed}>
+            <Link
+              href={ROUTES.WORKSPACE}
+              className={cn(
+                "flex items-center py-3 rounded-lg transition-colors duration-200 relative group",
+                isCollapsed ? "justify-center px-0" : "px-4 gap-3",
+                pathname.startsWith(ROUTES.WORKSPACE)
+                  ? "text-theme-accent font-bold bg-theme-forest/5"
+                  : "text-theme-on-surface opacity-60 hover:opacity-100 hover:text-theme-accent"
+              )}
+            >
+              <PenTool size={20} />
+              {!isCollapsed && <span className="font-sans text-[12px] uppercase tracking-widest">Workspace</span>}
+              {pathname.startsWith(ROUTES.WORKSPACE) && !isCollapsed && (
                 <span className="absolute right-0 w-1 h-4 bg-theme-accent rounded-full" />
               )}
             </Link>

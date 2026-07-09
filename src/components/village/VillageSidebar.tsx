@@ -12,8 +12,6 @@ import {
   MessageSquare,
   Users,
   LogOut,
-  Scale,
-  PiggyBankIcon,
   SquareIcon,
   XIcon
 } from 'lucide-react';
@@ -70,8 +68,6 @@ export default function VillageSidebar({ communityId: propCommunityId }: { commu
     { name: 'Profile', path: ROUTES.VILLAGE.HOME(communityId), icon: SquareIcon, exact: true },
     { name: 'Feed', path: ROUTES.VILLAGE.FEED(communityId), icon: MessageSquare },
     { name: 'Library', path: ROUTES.VILLAGE.LIBRARY(communityId), icon: BookOpen },
-    { name: 'Treasury', path: ROUTES.VILLAGE.TREASURY(communityId), icon: PiggyBankIcon },
-    { name: 'Governance', path: ROUTES.VILLAGE.GOVERNANCE(communityId), icon: Scale },
     { name: 'Members', path: ROUTES.VILLAGE.MEMBERS(communityId), icon: Users },
   ];
 
@@ -102,24 +98,33 @@ export default function VillageSidebar({ communityId: propCommunityId }: { commu
       <div className={cn("mb-10 flex items-center justify-between", isCollapsed ? "justify-center" : "")}>
         {!isCollapsed && (
           <div className='flex items-center gap-3 overflow-hidden'>
-            <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center overflow-hidden border border-theme-outline/20 bg-theme-surface-high relative">
-              {village?.profileImageUrl ? (
-                <Image 
-                  src={village.profileImageUrl} 
-                  alt={village.name || 'Village'} 
-                  fill 
-                  className="object-cover" 
-                  unoptimized 
-                />
-              ) : (
-                <div className="w-full h-full bg-theme-clay flex items-center justify-center font-serif text-white font-bold">
-                  {village?.name?.charAt(0) || 'V'}
+            {isLoaded ? (
+              <>
+                <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center overflow-hidden border border-theme-outline/20 bg-theme-surface-high relative">
+                  {village?.profileImageUrl ? (
+                    <Image 
+                      src={village.profileImageUrl} 
+                      alt={village.name || 'Village'} 
+                      fill 
+                      className="object-cover" 
+                      unoptimized 
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-theme-clay flex items-center justify-center font-serif text-white font-bold">
+                      {village?.name?.charAt(0) || 'V'}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <h1 className="font-serif text-lg font-medium text-theme-forest leading-tight truncate">
-              {village?.name || 'Loading...'}
-            </h1>
+                <h1 className="font-serif text-lg font-medium text-theme-forest leading-tight truncate">
+                  {village?.name}
+                </h1>
+              </>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded bg-theme-outline/10 animate-pulse"></div>
+                <div className="w-32 h-6 rounded bg-theme-outline/10 animate-pulse"></div>
+              </div>
+            )}
           </div>
         )}
         <Button
@@ -160,10 +165,10 @@ export default function VillageSidebar({ communityId: propCommunityId }: { commu
 
       <div className={cn("mt-auto border-t border-theme-outline/20 pt-6", isCollapsed ? "px-2" : "px-4")}>
         <div className="space-y-4">
-          <SidebarTooltip label="Village Settings" isCollapsed={isCollapsed}>
+          <SidebarTooltip label="Community Settings" isCollapsed={isCollapsed}>
             <Link href={ROUTES.VILLAGE.SETTINGS(communityId)} className={cn("flex items-center text-sm opacity-60 hover:opacity-100 hover:text-theme-accent transition-colors", isCollapsed ? "justify-center" : "gap-3")}>
               <Settings size={18} />
-              {!isCollapsed && <span>Village Settings</span>}
+              {!isCollapsed && <span>Community Settings</span>}
             </Link>
           </SidebarTooltip>
           

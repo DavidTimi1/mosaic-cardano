@@ -7,8 +7,8 @@ export const ROUTES = {
   NEW_COMMUNITY: '/new',
   SETTINGS: '/settings',
   SUPPORT: '/support',
-  STUDIO: '/studio',
-  STUDIO_EDITOR: (documentId: string) => `/studio/${documentId}`,
+  WORKSPACE: '/workspace',
+  WORKSPACE_EDITOR: (documentId: string) => `/workspace/${documentId}`,
   PROFILE: '/profile', // generic profile
   NOTIFICATIONS: '/inbox',
   ARTIFACT: (id: string) => `/piece/${id}`,
@@ -16,7 +16,8 @@ export const ROUTES = {
   USER: (id: string, currentUserId?: string) => id === currentUserId ? '/profile' : `/u/${id}`,
 
   VILLAGE: {
-    HOME: (villageId: string) => `/v/${villageId}`,
+    HOME: (villageId: string) => `/v/${villageId}/feed`,
+    PROFILE: (villageId: string) => `/v/${villageId}`,
     PROJECTS: (villageId: string) => `/v/${villageId}/projects`,
     PROJECT: (villageId: string, projectId: string) => `/v/${villageId}/project/${projectId}`,
     LIBRARY: (villageId: string) => `/v/${villageId}/library`,
