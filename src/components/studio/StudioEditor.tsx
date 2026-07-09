@@ -158,16 +158,16 @@ export default function StudioEditor({
       if (!currentPieceId) {
         const { id: newId } = await createDocument({
           title: title || 'Untitled Draft',
-          content: editor.getHTML()
+          content: editor.getMarkdown()
         });
         setCurrentPieceId(newId);
         savedId = newId;
         await deleteLocalDocument('new-draft');
-        router.replace(ROUTES.STUDIO_EDITOR(newId));
+        router.replace(ROUTES.WORKSPACE_EDITOR(newId));
       } else {
         await updateDocument({
           documentId: currentPieceId,
-          updates: { title: title || 'Untitled Draft', contentRaw: editor.getHTML() }
+          updates: { title: title || 'Untitled Draft', contentRaw: editor.getMarkdown() }
         });
       }
       
@@ -179,7 +179,7 @@ export default function StudioEditor({
           id: savedId,
           title: title || 'Untitled Draft',
           contentSnippet: editor.getText().slice(0, 100),
-          content: editor.getHTML(),
+          content: editor.getMarkdown(),
           lastAccessed: Date.now(),
         });
       }
@@ -245,6 +245,7 @@ export default function StudioEditor({
   const loggedInUserId = authState?.user?.id;
   const userContribution = document?.contributions?.find(c => c.userId === loggedInUserId);
   const needsToSign = userContribution?.status === 'Pending' && (userContribution.weight || 0) > 0;
+  const isCreator = document?.creator?.id === loggedInUserId;
 
   return (
     <main className="flex-1 flex flex-col h-full bg-theme-surface relative">
@@ -311,20 +312,30 @@ export default function StudioEditor({
             </button>
           </div>
           
-          <button 
-            onClick={() => {
-              if (isFrozen) {
-                setPublishStep(document?.publishStage || 'draft');
-              } else {
-                setPublishStep('draft');
-              }
-            }}
-            disabled={!currentPieceId || isSaving}
-            title={!currentPieceId ? "Please save your draft first" : (isFrozen ? "Continue Publishing" : "Publish to Library")}
-            className="bg-theme-forest text-theme-parchment px-4 py-1.5 md:px-5 md:py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest cursor-pointer hover:bg-theme-forest/90 transition-transform active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isFrozen ? `Continue: ${document?.publishStage}` : 'Publish Piece'}
-          </button>
+          {isCreator ? (
+            <button 
+              onClick={() => {
+                if (isFrozen) {
+                  setPublishStep(document?.publishStage || 'draft');
+                } else {
+                  setPublishStep('draft');
+                }
+              }}
+              disabled={!currentPieceId || isSaving}
+              title={!currentPieceId ? "Please save your draft first" : (isFrozen ? "Continue Publishing" : "Publish to Library")}
+              className="bg-theme-forest text-theme-parchment px-4 py-1.5 md:px-5 md:py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest cursor-pointer hover:bg-theme-forest/90 transition-transform active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isFrozen ? `Continue: ${document?.publishStage}` : 'Publish Piece'}
+            </button>
+          ) : (
+            <button 
+              disabled
+              title="Only the creator can publish"
+              className="bg-theme-outline/20 text-theme-on-surface/50 px-4 py-1.5 md:px-5 md:py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest cursor-not-allowed"
+            >
+              Publish Piece
+            </button>
+          )}
           
           {/* Mobile Sidebar Toggle */}
           <button 
