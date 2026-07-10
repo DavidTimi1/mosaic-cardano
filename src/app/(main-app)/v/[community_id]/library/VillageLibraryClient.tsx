@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useGetVillageLibrary } from '@/services/villages';
 import { StatePanel } from '@/components/ui/StatePanel';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MoveRight } from 'lucide-react';
 import { PieceCard } from '@/components/piece/PieceCard';
 import { PieceDetails } from '@/types/mosaic';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ export default function VillageLibraryClient({
   initialData: unknown;
 }) {
   const [activeFilter, setActiveFilter] = useState('All');
-  const displayActive = activeFilter === 'All' ? 'item' : activeFilter;
+  const displayActive = activeFilter === 'All' ? 'items' : activeFilter;
 
   const {
     data,
@@ -35,12 +35,12 @@ export default function VillageLibraryClient({
 
   return (
     <>
-      <div className="flex justify-between items-center bg-theme-surface-low rounded-xl p-4 border border-theme-outline/20 mb-8">
+      <div className="flex justify-between items-center bg-theme-surface-low rounded-xl p-4 border border-theme-outline/20">
         <p className="text-sm text-theme-on-surface/70">
           Looking for a piece that has not been published yet?
         </p>
-        <Button variant="link" size="none" asChild className="text-theme-accent font-bold">
-          <Link href={ROUTES.WORKSPACE}>Visit Workspace &rarr;</Link>
+        <Button variant="link" size="none" asChild className="text-theme-accent font-bold group">
+          <Link href={ROUTES.WORKSPACE}>Visit Workspace <MoveRight className='group-hover:translate-x-2 transition-transform' /> </Link>
         </Button>
       </div>
 
@@ -67,10 +67,10 @@ export default function VillageLibraryClient({
       ) : items.length === 0 ? (
         <StatePanel 
           variant="empty" 
-          title="No Pieces Found" 
-          description={`There are no published ${displayActive}s in this community yet.`}
+          title="No Items Found" 
+          description={`There are no published ${displayActive} in this community yet.`}
           hasAction
-          actionLabel="Create Piece"
+          actionLabel="Create a Piece"
           onTriggerAction={() => {}}
         />
       ) : (

@@ -19,7 +19,7 @@ export default function ExploreHeader() {
           </h1>
           
           <p className="font-sans text-theme-on-surface/80 max-w-lg leading-relaxed text-sm md:text-base">
-            Discover communities, artifacts, and collaborative projects emerging across the decentralized network.
+            Discover communities, artifacts, and collaborative projects emerging across the network.
           </p>
         </div>
       </div>

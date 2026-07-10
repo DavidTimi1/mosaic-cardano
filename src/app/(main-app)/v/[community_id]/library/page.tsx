@@ -25,7 +25,7 @@ export default async function VillageLibraryPage({ params, searchParams }: { par
   };
 
   return (
-    <AppPageContainer title="Village Library" description="The permanent archive of everything created and published by this community">
+    <AppPageContainer title="Community Library" description="The permanent archive of everything created and published by this community">
       <VillageLibraryClient communityId={community_id} initialData={initialData} />
     </AppPageContainer>
   );
