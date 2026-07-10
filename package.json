@@ -1,7 +1,20 @@
 {
   "name": "mosaic-cardano",
   "version": "0.1.0",
+  "description": "A decentralized platform for community co-creation, powered by Cardano.",
+  "author": "Mosaic Team",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sirXalfred/mosaic-cardano.git"
+  },
+  "keywords": [
+    "cardano",
+    "web3",
+    "community",
+    "collaboration",
+    "creator-economy"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -15,3 +15,12 @@ This document outlines the reputation badges available on the Mosaic platform, w
 
 ## Future Expansion
 Additional badges should be registered both here and in the frontend `BADGE_MAP` (`src/lib/badges.ts`) to ensure they render correctly across the application. Backend triggers must be explicitly wired to use the unique `Slug` to track claims and ownership.
+
+### Planned Badges (Phase 2 & 3)
+| Slug | Display Name | Proposed Trigger Condition | Verification Method |
+| :--- | :--- | :--- | :--- |
+| `village-elder` | Village Elder | Awarded to admins of communities that reach 100+ members and consistent weekly activity. | Off-chain (Database metrics) |
+| `top-contributor` | Top Contributor | Awarded to users who have successfully published 10+ Pieces with non-zero splits. | On-chain (Wallet signature history) |
+| `treasury-backer` | Backer | Awarded to users who have subscribed to or tipped a community treasury in ADA. | On-chain (Tx verification) |
+
+*Product Note: As we transition these into development, engineering must ensure that on-chain badges check the user's connected wallet address, not just their database ID.*
