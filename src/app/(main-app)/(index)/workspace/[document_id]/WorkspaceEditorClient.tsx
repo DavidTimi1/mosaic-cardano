@@ -16,7 +16,7 @@ export default function WorkspaceEditorClient({
   documentId: string;
   initialData?: DocumentDetails | null;
 }) {
-  const { document, isLoading: isDocumentLoading, isContentLoading } = useGetDocumentDetails(documentId, initialData);
+  const { document, isLoading: isDocumentLoading, isContentLoading } = useGetDocumentDetails(documentId);
   const { data: comments } = useGetDocumentComments(documentId);
   const { data: myVillages } = useGetMyVillages();
   
