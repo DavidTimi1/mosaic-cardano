@@ -84,12 +84,12 @@ function TopAppBar({ leftContent, rightContent }: TopAppBarProps) {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
                   <Link href={ROUTES.NEW_COMMUNITY}>
-                    Community
+                    New Community
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href={ROUTES.WORKSPACE}>
-                    Piece
+                  <Link href={ROUTES.WORKSPACE + '/new'}>
+                    New Piece
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
