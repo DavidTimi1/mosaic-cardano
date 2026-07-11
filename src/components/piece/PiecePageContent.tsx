@@ -13,6 +13,7 @@ import { ArrowLeft, Users, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TexturedCard } from '@/components/ui/textured-card';
 import { PieceDetails } from '@/types/mosaic';
+import { getExplorerUrl } from '@/services/api';
 
 export default function PiecePageContent({ piece }: { piece?: PieceDetails | null }) {
 
@@ -118,11 +119,11 @@ export default function PiecePageContent({ piece }: { piece?: PieceDetails | nul
             </div>
             <div className="font-mono text-xs text-theme-on-surface/50 uppercase tracking-widest flex items-center gap-2 flex-wrap">
               <span>Published {new Date(piece.createdAt).toLocaleDateString()}</span>
-              {piece.txHash && (
+              {piece.ipfsHash && (
                 <>
                   <span>•</span>
                   <a 
-                    href={`https://preprod.cardanoscan.io/transaction/${piece.txHash}`} 
+                    href={getExplorerUrl(piece.ipfsHash)} 
                     target="_blank" 
                     rel="noreferrer"
                     className="text-theme-accent hover:underline"
@@ -258,7 +259,7 @@ export default function PiecePageContent({ piece }: { piece?: PieceDetails | nul
   
               <div className="space-y-4">
                 {contributors.map((c) => (
-                  <div key={c.userId} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-theme-outline/10 shadow-sm">
+                  <Link href={ROUTES.USER(c.userId)} key={c.userId} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-theme-outline/10 shadow-sm">
                     <div className="w-10 h-10 rounded-full border-2 border-theme-parchment bg-theme-clay flex items-center justify-center text-xs font-bold text-white shadow-sm shrink-0">
                       {c.name?.substring(0, 2).toUpperCase()}
                     </div>
@@ -266,7 +267,7 @@ export default function PiecePageContent({ piece }: { piece?: PieceDetails | nul
                       <h4 className="font-bold text-sm text-theme-forest truncate">{c.name}</h4>
                       <p className="text-xs text-theme-on-surface/60 truncate">{c.role} • {c.weight}%</p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
               

@@ -40,7 +40,7 @@ export interface PieceDetails {
     id: string;
     name: string;
   };
-  txHash?: string;
+  ipfsHash?: string;
   contributors: {
     userId: string;
     name: string;

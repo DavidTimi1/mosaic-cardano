@@ -8,6 +8,7 @@ import confetti from 'canvas-confetti';
 import { Award, Sparkles, Hexagon } from 'lucide-react';
 import { toast } from 'sonner';
 import { getBadgeConfig } from '@/lib/badges';
+import { getExplorerUrl } from '@/services/api';
 
 
 export function BadgesModal() {
@@ -111,9 +112,9 @@ export function BadgesModal() {
 
                                         <div>
                                             <h4 className="font-bold text-sm text-theme-on-surface">{config.name}</h4>
-                                            {badge.status === 'CLAIMED' && (
+                                            {badge.status === 'CLAIMED' && badge.txHash && (
                                                 <a 
-                                                    href={`https://preprod.cardanoscan.io/transaction/${badge.txHash}`} 
+                                                    href={getExplorerUrl(badge.txHash)} 
                                                     target="_blank" 
                                                     rel="noreferrer"
                                                     className="text-[10px] text-theme-forest hover:underline"

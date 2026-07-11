@@ -29,6 +29,7 @@ export default function StudioSidebarRight({
   const { mutateAsync: addComment, isPending: isAddingComment } = useAddDocumentComment();
 
   const isCreator = document?.creator?.id === userId;
+  const waitingForSignatures = document?.publishStage === 'waiting';
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,7 +184,7 @@ export default function StudioSidebarRight({
                     )}
                     {document?.contributions?.map(c => {
                       const isCurrentUser = c.userId === userId;
-                      const needsSignature = c.status !== 'Signed' && isCurrentUser;
+                      const needsSignature = c.status !== 'Signed' && isCurrentUser && waitingForSignatures;
 
                       return (
                         <div key={c.id} className={`flex flex-col gap-3 p-3 bg-white rounded-lg border shadow-sm transition-all duration-300 ${c.status === 'Signed' ? 'border-theme-forest/30 bg-theme-forest/5' : 'border-theme-outline/10'} ${needsSignature ? 'animate-pulse border-theme-accent/50' : ''}`}>
@@ -197,11 +198,15 @@ export default function StudioSidebarRight({
                                 <div className="text-[10px] text-theme-on-surface/50 uppercase tracking-wider truncate">{c.role} {c.weight > 0 ? `• ${c.weight}%` : ''}</div>
                               </div>
                             </div>
-                            <div className="shrink-0 ml-2">
-                              <span className={`text-[10px] px-2 py-1 rounded-full border ${c.status === 'Signed' ? 'border-theme-forest text-theme-forest bg-theme-forest/10' : 'border-theme-accent text-theme-accent bg-theme-accent/10'}`}>
-                                {c.status}
-                              </span>
-                            </div>
+                            {
+                              waitingForSignatures && (
+                                <div className="shrink-0 ml-2">
+                                  <span className={`text-[10px] px-2 py-1 rounded-full border ${c.status === 'Signed' ? 'border-theme-forest text-theme-forest bg-theme-forest/10' : 'border-theme-accent text-theme-accent bg-theme-accent/10'}`}>
+                                    {c.status}
+                                  </span>
+                                </div>
+                              )
+                            }
                           </div>
                           {needsSignature && (
                             <div className="mt-1 flex justify-end">

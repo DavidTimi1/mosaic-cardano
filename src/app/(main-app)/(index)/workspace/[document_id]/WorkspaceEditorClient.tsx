@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGetDocumentDetails, useGetDocumentComments } from '@/services/documents';
 import { useGetMyVillages } from '@/services/villages';
 
@@ -22,6 +22,23 @@ export default function WorkspaceEditorClient({
   
   const [publishStep, setPublishStep] = useState<PublishStep | null>(null);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  
+  const hasAutoOpenedRef = useRef(false);
+
+  // Reset the auto-open tracker when the document ID changes
+  useEffect(() => {
+    hasAutoOpenedRef.current = false;
+  }, [documentId]);
+
+  // Automatically open the publishing modal if the document is loaded and in a publishing stage
+  useEffect(() => {
+    if (document && !hasAutoOpenedRef.current) {
+      hasAutoOpenedRef.current = true;
+      if (document.publishStage && document.publishStage !== 'draft') {
+        setPublishStep(document.publishStage as PublishStep);
+      }
+    }
+  }, [document]);
   
   if (isDocumentLoading && !initialData) {
     return <div className="min-h-screen bg-theme-surface flex items-center justify-center">Loading Workspace...</div>;

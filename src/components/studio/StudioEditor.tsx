@@ -246,8 +246,10 @@ export default function StudioEditor({
   // Only show signing button if the logged-in user is a contributor with 'Pending' status and has been assigned a weight > 0
   const loggedInUserId = authState?.user?.id;
   const userContribution = document?.contributions?.find(c => c.userId === loggedInUserId);
-  const needsToSign = userContribution?.status === 'Pending' && (userContribution.weight || 0) > 0;
+  const waitingForSignatures = document?.publishStage === 'waiting';
+  const needsToSign = userContribution?.status === 'Pending' && waitingForSignatures && (userContribution.weight || 0) > 0;
   const isCreator = document?.creator?.id === loggedInUserId;
+  const displayPublishStage = document?.publishStage === 'waiting' ? 'Awaiting Signatures' : document?.publishStage;
 
   return (
     <main className="flex-1 flex flex-col h-full bg-theme-surface relative">
@@ -304,22 +306,27 @@ export default function StudioEditor({
                 <CheckCircle2 size={12} /> Saved
               </span>
             )}
-            <Button
-              variant={isNew ? 'default' : 'outline'}
-              size="sm"
-              onClick={handleSave}
-              disabled={isSaving}
-              title="Save Draft"
-            >
-              {isSaving ? <Loader2 size={16} className="animate-spin" /> :
-                <>
-                  <span className={`${isNew ? '' : 'hidden'} md:block`}>
-                    Save
-                  </span>
-                  <Save size={16} />
-                </>
-              }
-            </Button>
+            
+            {
+              !isFrozen && (
+                <Button
+                  variant={isNew ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  title="Save Draft"
+                >
+                  {isSaving ? <Loader2 size={16} className="animate-spin" /> :
+                    <>
+                      <span className={`${isNew ? '' : 'hidden'} md:block`}>
+                        Save
+                      </span>
+                      <Save size={16} />
+                    </>
+                  }
+                </Button>
+              )
+            }
           </div>
 
           {!isNew && (isCreator ? (
@@ -335,7 +342,7 @@ export default function StudioEditor({
               title={!currentPieceId ? "Please save your draft first" : (isFrozen ? "Continue Publishing" : "Publish to Library")}
               className="bg-theme-forest text-theme-parchment px-4 py-1.5 md:px-5 md:py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest cursor-pointer hover:bg-theme-forest/90 transition-transform active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isFrozen ? `Continue: ${document?.publishStage}` : 'Publish Piece'}
+              {isFrozen ? `Continue: ${displayPublishStage}` : 'Publish Piece'}
             </button>
           ) : (
             <button

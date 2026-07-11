@@ -94,3 +94,14 @@ export const fetchAPI = async (url: string, options: FetchAPIOptions = {}): Prom
     throw error;
   }
 }
+
+
+const isLive = process.env.NEXT_PUBLIC_IS_LIVE;
+
+export const getExplorerUrl = (hash: string, type: 'tx' | 'address' = 'tx') => {
+  if (isLive) {
+    return `https://cardanoscan.io/${type}/${hash}`;
+  } else {
+    return `https://preprod.cardanoscan.io/${type}/${hash}`;
+  }
+}

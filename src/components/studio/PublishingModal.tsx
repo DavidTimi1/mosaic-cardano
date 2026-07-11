@@ -7,6 +7,7 @@ import { useGetAuthState } from '@/services/auth';
 import { DocumentDetails, PublishStep } from '@/types/mosaic';
 import Link from 'next/link';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { SignContributionButton } from './SignContributionButton';
 
 export default function PublishingModal({
   publishStep,
@@ -329,6 +330,11 @@ export default function PublishingModal({
                     <span className={`font-bold ${c.status === 'Signed' ? 'text-green-600' : 'text-theme-accent'}`}>
                       {c.status}
                     </span>
+                    {
+                      c.userId === authState?.user?.id && c.status === 'Pending' && (
+                        <SignContributionButton documentId={document.id} weight={c.weight} />
+                      )
+                    }
                   </div>
                 ))}
               </div>
