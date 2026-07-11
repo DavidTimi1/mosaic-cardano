@@ -17,7 +17,7 @@ const MemberCheck = ({ children, communityId }: { children: React.ReactNode, com
         if (!isLoaded || !authLoaded) return;
 
         if (!membership?.isMember) {
-            router.replace(ROUTES.VILLAGE.HOME(communityId));
+            router.replace(ROUTES.VILLAGE.PROFILE(communityId));
         }
     }, [isLoaded, authLoaded, membership, router, communityId]);
 

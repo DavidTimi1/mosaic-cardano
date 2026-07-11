@@ -56,7 +56,7 @@ export const CommunityShowcaseSection = ({ itemVariants, containerVariants }: { 
                   <div className="mt-8 pt-6 border-t border-theme-outline/10 flex items-center justify-between text-xs font-bold uppercase tracking-widest font-sans text-theme-on-surface/50">
                     <span className="flex items-center gap-2"><Users size={14} /> {village.members}</span>
                     <Button asChild variant="link">
-                      <Link href={ROUTES.VILLAGE.HOME(village.id)} target='_blank' rel='noopener noreferrer'>
+                      <Link href={ROUTES.VILLAGE.PROFILE(village.id)} target='_blank' rel='noopener noreferrer'>
                         Visit
                       </Link>
                     </Button>
