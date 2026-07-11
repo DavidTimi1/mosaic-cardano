@@ -140,15 +140,23 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
           <script dangerouslySetInnerHTML={{
             __html: `
-            window.addEventListener('load', function() {
-              var loader = document.getElementById('global-loader');
-              if (loader) {
-                loader.style.opacity = '0';
-                setTimeout(function() {
-                  loader.style.display = 'none';
-                }, 500);
+            (function() {
+              function hideLoader() {
+                var loader = document.getElementById('global-loader');
+                if (loader) {
+                  loader.style.opacity = '0';
+                  setTimeout(function() {
+                    loader.style.display = 'none';
+                  }, 500);
+                }
               }
-            });
+              if (document.readyState === 'interactive' || document.readyState === 'complete') {
+                hideLoader();
+              } else {
+                window.addEventListener('DOMContentLoaded', hideLoader);
+                window.addEventListener('load', hideLoader);
+              }
+            })();
           `
           }} />
         </div>
