@@ -7,7 +7,10 @@ import { useGetAuthState } from '@/services/auth';
 import { DocumentDetails, PublishStep } from '@/types/mosaic';
 import Link from 'next/link';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { SignContributionButton } from './SignContributionButton';
+import dynamic from 'next/dynamic';
+
+
+const SignContributionButton = dynamic(() => import('./SignContributionButton').then((m) => m.SignContributionButton), { ssr: false });
 
 export default function PublishingModal({
   publishStep,
