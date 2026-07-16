@@ -43,6 +43,14 @@ export async function generateMetadata({ params }: { params: Promise<{ community
 }
 
 
+export async function generateStaticParams() {
+  const villages = await villageService.listAllVillages();
+  return villages.map(village => ({
+    community_id: village.id,
+  }));
+}
+
+
 export default async function CommunityLayout({ 
   children,
   params

@@ -96,7 +96,7 @@ export const fetchAPI = async (url: string, options: FetchAPIOptions = {}): Prom
 }
 
 
-export const getExplorerUrl = (hash: string, type: 'tx' | 'address' = 'tx', isMainnetOverride?: number | boolean) => {
+export const getExplorerUrl = (hash: string, isMainnetOverride?: number | boolean, type: 'transaction' | 'address' = 'transaction') => {
   const isMainnet = isMainnetOverride !== undefined 
     ? (isMainnetOverride === 1 || isMainnetOverride === true)
     : process.env.NEXT_PUBLIC_IS_LIVE === 'true';
@@ -105,7 +105,7 @@ export const getExplorerUrl = (hash: string, type: 'tx' | 'address' = 'tx', isMa
     ? `https://cardanoscan.io/${type}/${hash}`
     : `https://preprod.cardanoscan.io/${type}/${hash}`;
 
-  if (type === 'tx') {
+  if (type === 'transaction') {
     return `${baseUrl}?tab=metadata`;
   }
   return baseUrl;

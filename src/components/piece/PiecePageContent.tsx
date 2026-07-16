@@ -119,11 +119,24 @@ export default function PiecePageContent({ piece }: { piece?: PieceDetails | nul
             </div>
             <div className="font-mono text-xs text-theme-on-surface/50 uppercase tracking-widest flex items-center gap-2 flex-wrap">
               <span>Published {new Date(piece.createdAt).toLocaleDateString()}</span>
+              {piece.ipfsManifest && (
+                <>
+                  <span>•</span>
+                  <a 
+                    href={resolveIPFSUri(piece.ipfsManifest)} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="text-theme-accent hover:underline"
+                  >
+                    View IPFS Manifest
+                  </a>
+                </>
+              )}
               {piece.ipfsHash && (
                 <>
                   <span>•</span>
                   <a 
-                    href={getExplorerUrl(piece.ipfsHash, 'tx', piece.isMainnet)} 
+                    href={getExplorerUrl(piece.ipfsHash, piece.isMainnet)} 
                     target="_blank" 
                     rel="noreferrer"
                     className="text-theme-accent hover:underline"
