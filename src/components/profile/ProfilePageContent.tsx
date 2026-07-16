@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Tent } from 'lucide-react';
+import { ChevronDown, ChevronUp, Tent, ArrowLeft } from 'lucide-react';
 import { useGetUserProfile, useGetUserPublishedWorks, useGetUserContributions, useGetUserReputation } from '@/services/users';
 import { Button } from '@/components/ui/button';
 
@@ -13,7 +13,7 @@ import { ReputationSidebar } from '@/components/profile/ReputationSidebar';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/routes';
 
-export const ProfilePageContent = ({ username }: { username: string }) => {
+export const ProfilePageContent = ({ username, backUrl }: { username: string; backUrl?: string }) => {
     const [showFullPassport, setShowFullPassport] = useState(false);
 
     const { data: works, isLoading: isLoadingWorks } = useGetUserPublishedWorks(username);
@@ -23,6 +23,16 @@ export const ProfilePageContent = ({ username }: { username: string }) => {
 
     return (
         <div className="flex-1 space-y-16">
+            {backUrl && (
+                <div className="mb-2">
+                    <Button asChild variant="link" size="sm" className="pl-0 text-theme-on-surface/60 hover:text-theme-forest font-sans uppercase tracking-widest text-[10px] font-bold">
+                        <Link href={backUrl}>
+                            <ArrowLeft size={14} className="mr-1" />
+                            Back
+                        </Link>
+                    </Button>
+                </div>
+            )}
             <div className="border border-theme-outline/10 rounded-3xl p-8 md:p-12">
                 <ProfileHeader profile={profile} isLoading={isLoadingProfile} />
 

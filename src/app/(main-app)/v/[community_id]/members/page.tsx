@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { useGetVillageMembers, useRemoveVillageMembers, useGetVillageDetails, useShareInvite } from '@/services/villages';
 import { useGetAuthState } from '@/services/auth';
 import { StatePanel } from '@/components/ui/StatePanel';
@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 import AppPageContainer from '@/components/layout/AppPageContainer';
 import { Button } from '@/components/ui/button';
 import { MemberGuard } from '@/contexts/member-guard';
+import Link from 'next/link';
+import { ROUTES } from '@/lib/routes';
 
 
 export default function VillageMembersPage() {
@@ -23,6 +25,7 @@ export default function VillageMembersPage() {
 function VillageMembersPageContent() {
   const params = useParams();
   const communityId = params.community_id as string;
+  const pathname = usePathname();
 
   const { data: members, isLoading, isError, refetch } = useGetVillageMembers(communityId);
   const { data: village } = useGetVillageDetails(communityId);
@@ -131,27 +134,31 @@ function VillageMembersPageContent() {
                     />
                   </div>
                 )}
-                
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-theme-surface-high border border-theme-outline/20 flex-shrink-0 flex items-center justify-center">
-                  {member.avatarUrl ? (
-                    <Image src={member.avatarUrl} alt={member.displayName} width={48} height={48} className="object-cover w-full h-full" />
-                  ) : (
-                    <UserIcon size={20} className="text-theme-on-surface/50" />
-                  )}
-                </div>
-
-                <div className="flex flex-col flex-1 min-w-0 pr-8">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-theme-forest truncate">{member.displayName}</h3>
-                    {isMemberAdmin && <span title="Admin"><Shield size={14} className="text-theme-accent flex-shrink-0" /></span>}
+                <Link 
+                  href={member.username ? `${ROUTES.USER(member.username)}?back=${encodeURIComponent(pathname)}` : '#'} 
+                  className="flex items-center gap-4 flex-1 min-w-0 hover:opacity-85 transition-opacity"
+                >
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-theme-surface-high border border-theme-outline/20 flex-shrink-0 flex items-center justify-center">
+                    {member.avatarUrl ? (
+                      <Image src={member.avatarUrl} alt={member.displayName} width={48} height={48} className="object-cover w-full h-full" />
+                    ) : (
+                      <UserIcon size={20} className="text-theme-on-surface/50" />
+                    )}
                   </div>
-                  <p className="text-xs text-theme-on-surface/60 truncate">
-                    {member.username ? `@${member.username}` : member.id.split('-')[0]}
-                  </p>
-                  {isSelf && (
-                    <span className="text-[10px] uppercase tracking-widest font-bold text-theme-forest mt-1">You</span>
-                  )}
-                </div>
+
+                  <div className="flex flex-col flex-1 min-w-0 pr-8">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-theme-forest truncate">{member.displayName}</h3>
+                      {isMemberAdmin && <span title="Admin"><Shield size={14} className="text-theme-accent flex-shrink-0" /></span>}
+                    </div>
+                    <p className="text-xs text-theme-on-surface/60 truncate">
+                      {member.username ? `@${member.username}` : member.id.split('-')[0]}
+                    </p>
+                    {isSelf && (
+                      <span className="text-[10px] uppercase tracking-widest font-bold text-theme-forest mt-1">You</span>
+                    )}
+                  </div>
+                </Link>
               </div>
             );
           })}
