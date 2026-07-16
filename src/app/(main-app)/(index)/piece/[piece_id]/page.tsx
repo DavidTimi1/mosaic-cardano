@@ -34,6 +34,13 @@ export async function generateMetadata({ params }: { params: Promise<{ piece_id:
   };
 }
 
+export const generateStaticParams = async () => {
+  const pieces = await pieceService.getFeaturedPieces(10);
+  return pieces.map((piece) => ({
+    piece_id: piece.id,
+  }));
+};
+
 export default async function PiecePage({ params }: { params: Promise<{ piece_id: string }> }) {
   const { piece_id } = await params;
 

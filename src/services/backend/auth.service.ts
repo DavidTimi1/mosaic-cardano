@@ -370,5 +370,18 @@ export const authService = {
 
 		await invalidateCacheKey(cacheKey('user', parsedUserId));
 	},
+
+	async getAllUsers(): Promise<UserNode[]> {
+		const rows = await runRead(
+			`
+				MATCH (u:Mosaic_User)
+				WHERE NOT u.isDeleted
+				RETURN u AS user
+			`,
+			{},
+			row => mapUserNode(row.user),
+		);
+		return rows;
+	},
 };
 

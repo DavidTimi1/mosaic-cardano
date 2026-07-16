@@ -23,6 +23,13 @@ export const generateMetadata = async ({ params }: { params: Promise<{ username:
   };
 };
 
+export const generateStaticParams = async () => {
+  const users = await authService.getAllUsers();
+  return users.map((user) => ({
+    username: user.username,
+  }));
+};
+
 export default async function UserProfilePage({ 
   params,
   searchParams 
