@@ -46,17 +46,34 @@ export const POST = withAuth(async (request, { params }, userId) => {
       return NextResponse.json({ error: 'Only the creator can freeze the document' }, { status: 403 });
     }
 
+    // Fetch raw content from Cloudinary
+    let contentRaw = '';
+    if (doc.contentUrl) {
+      try {
+        const response = await fetch(doc.contentUrl);
+        if (response.ok) {
+          contentRaw = await response.text();
+        }
+      } catch (err) {
+        console.error('Failed to fetch content from Cloudinary:', err);
+      }
+    }
+
     // Freeze raw content to IPFS directly as a Blob
     // This allows the frontend to simply fetch(ipfsUrl) and get the raw Markdown
-    const contentBlob = new Blob([doc.contentRaw || ''], { type: 'text/markdown' });
+    const contentBlob = new Blob([contentRaw || ''], { type: 'text/markdown' });
     
     const contentIpfsHash = await uploadFileToIPFS(contentBlob, `${doc.title} - Content`);
     
+    // Determine the next publish stage based on contributors count
+    const isSingleContributor = !doc.contributions || doc.contributions.length <= 1;
+    const nextStage = isSingleContributor ? 'waiting' : 'propose';
+
     // Save CID and advance state
     await documentService.updateDocument(documentId, userId, {
       communityId: parseResult.data.communityId,
       contentUrl: contentIpfsHash,
-      publishStage: 'propose' // Move to propose stage
+      publishStage: nextStage
     });
 
     return NextResponse.json({ success: true, contentUrl: contentIpfsHash });

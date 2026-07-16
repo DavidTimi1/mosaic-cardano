@@ -60,7 +60,7 @@ export default function StudioEditor({
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
 
-  const isFrozen = ['freezing', 'propose', 'waiting', 'mint', 'success'].includes(document?.publishStage || '');
+  const isFrozen = ['freezing', 'propose', 'waiting', 'mint', 'success'].includes(document?.publishStage || '') || document?.status === 'Published';
   const isNew = documentId === 'new';
 
   const editor = useEditor({
@@ -149,6 +149,12 @@ export default function StudioEditor({
     }
     loadContent();
   }, [document, editor, documentId]);
+
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(!isFrozen);
+    }
+  }, [editor, isFrozen]);
 
   const handleSave = async () => {
     if (!editor) return;
@@ -260,9 +266,10 @@ export default function StudioEditor({
         <div className="flex-1 flex items-center pr-6">
           <input
             type="text"
-            className="w-full bg-transparent font-serif text-xl text-theme-forest outline-none placeholder:text-theme-outline/50 truncate"
+            className="w-full bg-transparent font-serif text-xl text-theme-forest outline-none placeholder:text-theme-outline/50 truncate disabled:opacity-75 disabled:cursor-not-allowed"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            disabled={isFrozen}
             placeholder="Untitled Document"
           />
         </div>
@@ -366,7 +373,7 @@ export default function StudioEditor({
       </div>
 
       {/* Tiptap Bubble Menu */}
-      {editor && (
+      {editor && !isFrozen && (
         <BubbleMenu editor={editor} className="flex items-center bg-theme-surface-high border border-theme-outline/20 shadow-xl rounded-lg overflow-hidden p-1 gap-1 animate-in zoom-in-95">
           <button onClick={() => editor.chain().focus().toggleBold().run()} className={`p-2 rounded text-theme-forest hover:bg-theme-outline/10 ${editor.isActive('bold') ? 'bg-theme-outline/20' : ''}`}><Bold size={15} /></button>
           <button onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-2 rounded text-theme-forest hover:bg-theme-outline/10 ${editor.isActive('italic') ? 'bg-theme-outline/20' : ''}`}><Italic size={15} /></button>
@@ -382,7 +389,7 @@ export default function StudioEditor({
       )}
 
       {/* Tiptap Floating Menu */}
-      {editor && (
+      {editor && !isFrozen && (
         <FloatingMenu editor={editor} className="flex items-center gap-1">
           <div className="bg-theme-surface-high border border-theme-outline/20 shadow-lg rounded-full flex items-center p-1 px-2 gap-2 animate-in slide-in-from-right-2">
             <button onClick={addImage} className="p-1.5 rounded-full text-theme-forest hover:bg-theme-outline/10 transition-colors" title="Add Image"><ImageIcon size={16} /></button>
