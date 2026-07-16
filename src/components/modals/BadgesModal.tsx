@@ -114,7 +114,7 @@ export function BadgesModal() {
                                             <h4 className="font-bold text-sm text-theme-on-surface">{config.name}</h4>
                                             {badge.status === 'CLAIMED' && badge.txHash && (
                                                 <a 
-                                                    href={getExplorerUrl(badge.txHash)} 
+                                                    href={getExplorerUrl(badge.txHash, 'tx', badge.isMainnet)} 
                                                     target="_blank" 
                                                     rel="noreferrer"
                                                     className="text-[10px] text-theme-forest hover:underline"

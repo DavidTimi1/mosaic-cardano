@@ -123,7 +123,7 @@ export default function PiecePageContent({ piece }: { piece?: PieceDetails | nul
                 <>
                   <span>•</span>
                   <a 
-                    href={getExplorerUrl(piece.ipfsHash)} 
+                    href={getExplorerUrl(piece.ipfsHash, 'tx', piece.isMainnet)} 
                     target="_blank" 
                     rel="noreferrer"
                     className="text-theme-accent hover:underline"
@@ -259,7 +259,7 @@ export default function PiecePageContent({ piece }: { piece?: PieceDetails | nul
   
               <div className="space-y-4">
                 {contributors.map((c) => (
-                  <Link href={ROUTES.USER(c.userId)} key={c.userId} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-theme-outline/10 shadow-sm">
+                  <Link href={ROUTES.USER(c.username)} key={c.userId} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-theme-outline/10 shadow-sm">
                     <div className="w-10 h-10 rounded-full border-2 border-theme-parchment bg-theme-clay flex items-center justify-center text-xs font-bold text-white shadow-sm shrink-0">
                       {c.name?.substring(0, 2).toUpperCase()}
                     </div>

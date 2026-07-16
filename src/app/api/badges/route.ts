@@ -106,7 +106,8 @@ export const POST = withAuth(async (req, context, userId) => {
         );
 
         // Mark as claimed
-        await badgeService.markBadgeClaimed(userId, badge.id, policyId, assetNameHex, assetNameBase, txHash);
+        const isMainnet = process.env.NEXT_PUBLIC_IS_LIVE === 'true' ? 1 : 0;
+        await badgeService.markBadgeClaimed(userId, badge.id, policyId, assetNameHex, assetNameBase, txHash, isMainnet);
 
         return NextResponse.json({ txHash, policyId, assetNameBase, assetNameHex });
     } catch (error: unknown) {

@@ -76,6 +76,10 @@ export const documentService = {
       setClauses.push('p.ipfsHash = $ipfsHash');
       params.ipfsHash = updates.ipfsHash;
     }
+    if (updates.isMainnet !== undefined) {
+      setClauses.push('p.isMainnet = toInteger($isMainnet)');
+      params.isMainnet = updates.isMainnet;
+    }
     if (updates.communityId) {
       setClauses.push('p.communityId = $communityId');
       params.communityId = updates.communityId;
@@ -143,6 +147,7 @@ export const documentService = {
         communityId: p.communityId as string,
         publishStage: p.publishStage as import('@/types/mosaic').PublishStep,
         ipfsHash: p.ipfsHash as string,
+        isMainnet: p.isMainnet !== undefined ? (p.isMainnet as number) : undefined,
         creator: {
           id: creator.id as string,
           username: creator.username as string

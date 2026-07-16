@@ -96,12 +96,17 @@ export const fetchAPI = async (url: string, options: FetchAPIOptions = {}): Prom
 }
 
 
-const isLive = process.env.NEXT_PUBLIC_IS_LIVE;
+export const getExplorerUrl = (hash: string, type: 'tx' | 'address' = 'tx', isMainnetOverride?: number | boolean) => {
+  const isMainnet = isMainnetOverride !== undefined 
+    ? (isMainnetOverride === 1 || isMainnetOverride === true)
+    : process.env.NEXT_PUBLIC_IS_LIVE === 'true';
 
-export const getExplorerUrl = (hash: string, type: 'tx' | 'address' = 'tx') => {
-  if (isLive) {
-    return `https://cardanoscan.io/${type}/${hash}`;
-  } else {
-    return `https://preprod.cardanoscan.io/${type}/${hash}`;
+  const baseUrl = isMainnet
+    ? `https://cardanoscan.io/${type}/${hash}`
+    : `https://preprod.cardanoscan.io/${type}/${hash}`;
+
+  if (type === 'tx') {
+    return `${baseUrl}?tab=metadata`;
   }
+  return baseUrl;
 }

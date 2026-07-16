@@ -8,6 +8,7 @@ export interface MosaicBadge {
     assetNameHex?: string;
     assetNameBase?: string;
     txHash?: string;
+    isMainnet?: number;
     createdAt: string;
     claimedAt?: string;
 }
@@ -25,6 +26,7 @@ export const badgeService = {
                     .assetNameHex,
                     .assetNameBase,
                     .txHash,
+                    .isMainnet,
                     .createdAt,
                     .claimedAt
                 } as badge
@@ -50,7 +52,7 @@ export const badgeService = {
         );
     },
 
-    async markBadgeClaimed(userId: string, badgeId: string, policyId: string, assetNameHex: string, assetNameBase: string, txHash: string): Promise<void> {
+    async markBadgeClaimed(userId: string, badgeId: string, policyId: string, assetNameHex: string, assetNameBase: string, txHash: string, isMainnet: number): Promise<void> {
         await runWrite(
             `
                 MATCH (u:Mosaic_User {id: $userId})-[:HAS_BADGE]->(b:Mosaic_Badge {id: $badgeId})
@@ -59,9 +61,10 @@ export const badgeService = {
                     b.assetNameHex = $assetNameHex,
                     b.assetNameBase = $assetNameBase,
                     b.txHash = $txHash,
+                    b.isMainnet = toInteger($isMainnet),
                     b.claimedAt = $now
             `,
-            { userId, badgeId, policyId, assetNameHex, assetNameBase, txHash, now: new Date().toISOString() },
+            { userId, badgeId, policyId, assetNameHex, assetNameBase, txHash, isMainnet, now: new Date().toISOString() },
             () => null
         );
     }

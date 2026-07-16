@@ -73,6 +73,8 @@ export const pieceService = {
         contentType: p.contentType as string,
         createdAt: p.createdAt as number,
         contributors: mappedContributors,
+        ipfsHash: p.ipfsHash as string,
+        isMainnet: p.isMainnet !== undefined ? (p.isMainnet as number) : undefined,
         community: {
           id: (community?.id as string) || '',
           name: (community?.name as string) || 'Unknown Community',
@@ -132,6 +134,8 @@ export const pieceService = {
         contentType: p.contentType as string,
         createdAt: p.createdAt as number,
         contributors: mappedContributors,
+        ipfsHash: p.ipfsHash as string,
+        isMainnet: p.isMainnet !== undefined ? (p.isMainnet as number) : undefined,
         community: {
           id: (communityNode?.id as string) || '',
           name: (communityNode?.name as string) || 'Unknown Community',

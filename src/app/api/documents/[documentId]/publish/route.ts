@@ -78,7 +78,8 @@ export const POST = withAuth(async (request, { params }, userId) => {
     // 5. Store txHash in Neo4j and advance stage to success
     await documentService.updateDocument(pieceId, userId, { 
       ipfsHash: txHash,
-      publishStage: 'success'
+      publishStage: 'success',
+      isMainnet: process.env.NEXT_PUBLIC_IS_LIVE === 'true' ? 1 : 0
     });
     
     return NextResponse.json({ success: true, pieceId, txHash });
