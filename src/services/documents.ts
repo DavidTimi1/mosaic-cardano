@@ -153,7 +153,7 @@ export const useGetDocumentDetails = (documentId: string | null, initialData?: D
     },
     enabled: !!documentId && documentId !== 'new' && !initialData,
     initialData: initialData,
-    staleTime: 10 * 1000 // 10 seconds to quickly reflect new status when waiting for others
+    staleTime: 5 * 1000 // 10 seconds to quickly reflect new status when waiting for others
   });
 
   const contentQuery = useQuery({

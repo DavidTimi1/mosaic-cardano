@@ -193,6 +193,7 @@ export const villageService = {
 
 		await Promise.all([
 			invalidateCachePattern(cacheKey('community', parsed.communityId, '*')),
+			invalidateCachePattern(cacheKey('community', 'mine', parsed.userId, '*')),
 			invalidateCachePattern(cacheKey('derived', 'recommended', parsed.userId, '*')),
 			invalidateCachePattern(cacheKey('derived', 'trending', '*')),
 		]);
@@ -216,6 +217,7 @@ export const villageService = {
 
 		await Promise.all([
 			invalidateCachePattern(cacheKey('community', parsed.communityId, '*')),
+			invalidateCachePattern(cacheKey('community', 'mine', parsed.userId, '*')),
 			invalidateCachePattern(cacheKey('derived', 'recommended', parsed.userId, '*')),
 			invalidateCachePattern(cacheKey('derived', 'trending', '*')),
 		]);
@@ -419,7 +421,7 @@ export const villageService = {
 					},
 				);
 			},
-			172800,
+			60 * 60 * 24 * 2,
 		);
 	},
 
@@ -454,8 +456,27 @@ export const villageService = {
 					},
 				);
 			},
-			120,
+			60 * 60,
 		);
 	},
+
+	async listAllVillages(): Promise<CommunityNode[]> {
+		const key = cacheKey('community', 'all');
+		return cacheAsideWithLock(
+			key,
+			async () => {
+				return runRead(
+					`
+						MATCH (c:Mosaic_Community)
+						WHERE coalesce(c.isDeleted, false) = false
+						RETURN c AS community
+					`,
+					{},
+					row => CommunityNodeSchema.parse(row.community),
+				);
+			},
+			60 * 60 * 24,
+		);
+	}
 };
 

@@ -94,3 +94,19 @@ export const fetchAPI = async (url: string, options: FetchAPIOptions = {}): Prom
     throw error;
   }
 }
+
+
+export const getExplorerUrl = (hash: string, isMainnetOverride?: number | boolean, type: 'transaction' | 'address' = 'transaction') => {
+  const isMainnet = isMainnetOverride !== undefined 
+    ? (isMainnetOverride === 1 || isMainnetOverride === true)
+    : process.env.NEXT_PUBLIC_IS_LIVE === 'true';
+
+  const baseUrl = isMainnet
+    ? `https://cardanoscan.io/${type}/${hash}`
+    : `https://preprod.cardanoscan.io/${type}/${hash}`;
+
+  if (type === 'transaction') {
+    return `${baseUrl}?tab=metadata`;
+  }
+  return baseUrl;
+}

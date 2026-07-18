@@ -41,8 +41,9 @@ export const GET = withAuth(async (request, { params }, userId) => {
 
 const UpdateSchema = z.object({
   title: z.string().optional(),
-  content: z.string().optional(),
-  status: z.string().optional()
+  contentRaw: z.string().optional(),
+  status: z.string().optional(),
+  publishStage: z.enum(['draft', 'community', 'freezing', 'propose', 'waiting', 'mint', 'success']).optional()
 });
 
 

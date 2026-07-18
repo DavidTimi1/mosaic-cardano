@@ -1,7 +1,7 @@
 "use client";
 
 import React, { ReactNode } from 'react';
-import { BellIcon, PlusIcon, User, Palette, Award, LogOut, User2Icon, Wallet, MenuIcon, ChevronDownIcon } from 'lucide-react';
+import { BellIcon, PlusIcon, User, PenTool, SettingsIcon, Award, LogOut, User2Icon, Wallet, MenuIcon, ChevronDownIcon } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useGetAuthState } from '@/services/auth';
@@ -149,7 +149,7 @@ function TopAppBar({ leftContent, rightContent }: TopAppBarProps) {
 
                     <DropdownMenuItem asChild>
                       <Link href={ROUTES.WORKSPACE} className="flex items-center gap-3 w-full">
-                        <Palette size={16} className="text-theme-on-surface/60" />
+                        <PenTool size={16} className="text-theme-on-surface/60" />
                         <span>Workspace</span>
                       </Link>
                     </DropdownMenuItem>
@@ -159,6 +159,13 @@ function TopAppBar({ leftContent, rightContent }: TopAppBarProps) {
                         <Award size={16} className="text-theme-on-surface/60" />
                         <span>Badges</span>
                       </div>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem asChild>
+                      <Link href={ROUTES.SETTINGS} className="flex items-center gap-3 w-full">
+                        <SettingsIcon size={16} className="text-theme-on-surface/60" />
+                        <span>Settings</span>
+                      </Link>
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />

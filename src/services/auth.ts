@@ -100,7 +100,7 @@ export const useLinkWallet = () => {
 export const useGetBadges = () => {
   return useXQuery({
     queryKey: ['userBadges'],
-    queryFn: async () => fetchAPI('/api/badges') as Promise<{ badges: Array<{ id: string, type: string, status: string, policyId?: string, assetNameBase?: string, txHash?: string }> }>
+    queryFn: async () => fetchAPI('/api/badges') as Promise<{ badges: Array<{ id: string, type: string, status: string, policyId?: string, assetNameBase?: string, txHash?: string, isMainnet?: number }> }>
   });
 };
 

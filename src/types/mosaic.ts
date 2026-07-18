@@ -23,6 +23,8 @@ export interface DocumentDetails {
   status: string;
   publishStage?: PublishStep;
   ipfsHash?: string;
+  ipfsManifest?: string;
+  isMainnet?: number;
   creator?: {
     id: string;
     username: string;
@@ -40,7 +42,9 @@ export interface PieceDetails {
     id: string;
     name: string;
   };
-  txHash?: string;
+  ipfsHash?: string;
+  ipfsManifest?: string;
+  isMainnet?: number;
   contributors: {
     userId: string;
     name: string;

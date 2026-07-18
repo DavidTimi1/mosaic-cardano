@@ -7,6 +7,11 @@ import { useGetAuthState } from '@/services/auth';
 import { DocumentDetails, PublishStep } from '@/types/mosaic';
 import Link from 'next/link';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import dynamic from 'next/dynamic';
+import { toast } from 'sonner';
+
+
+const SignContributionButton = dynamic(() => import('./SignContributionButton').then((m) => m.SignContributionButton), { ssr: false });
 
 export default function PublishingModal({
   publishStep,
@@ -84,10 +89,12 @@ export default function PublishingModal({
             setPieceId(res.pieceId);
             setPublishStep('success');
           }
-        } catch (e) {
-          console.error(e);
+        } catch (e: unknown) {
+          console.error('Minting failed:', e);
+          const msg = e instanceof Error ? e.message : 'Failed to finalize publication. Please try again.';
+          toast.error(msg);
           if (isMounted) {
-            setPublishStep('draft');
+            setPublishStep('waiting');
             hasMintedRef.current = false;
           }
         }
@@ -118,48 +125,52 @@ export default function PublishingModal({
   };
 
   const handleContinue = async () => {
-    if (publishStep === 'community') {
-      if (!selectedCommunity) return alert('Select a community');
-      
-      setPublishStep('freezing');
-      try {
+    try {
+      if (publishStep === 'community') {
+        if (!selectedCommunity) return alert('Select a community');
+        
+        setPublishStep('freezing');
         const res = await freezeContent({ documentId: document.id, communityId: selectedCommunity });
         if (res.success) {
           if (document.contributions && document.contributions.length > 1) {
             setPublishStep('propose');
           } else {
-            setPublishStep('mint');
+            setPublishStep('waiting');
           }
         }
-      } catch (e) {
-        console.error(e);
+        return;
+      }
+
+      if (publishStep === 'propose') {
+        if (!isValidSplits) return alert('Splits must equal 100%');
+        await proposeSplits({
+          documentId: document.id,
+          splits: splits.map(s => ({ userId: s.userId, role: s.role, weight: s.weight }))
+        });
+        setPublishStep('waiting');
+        return;
+      }
+
+      if (publishStep === 'waiting') {
+        if (!allSigned) return alert('Waiting for all contributors to sign');
+        setPublishStep('mint');
+        return;
+      }
+
+      if (publishStep === 'mint') {
+        // The useEffect handles the actual API call
+        return;
+      }
+
+      nextPublishStep(publishStep);
+    } catch (e: unknown) {
+      console.error('Publishing flow step failed:', e);
+      const msg = e instanceof Error ? e.message : 'An error occurred during publishing';
+      toast.error(msg);
+      if (publishStep === 'community') {
         setPublishStep('community');
       }
-      return;
     }
-
-    if (publishStep === 'propose') {
-      if (!isValidSplits) return alert('Splits must equal 100%');
-      await proposeSplits({
-        documentId: document.id,
-        splits: splits.map(s => ({ userId: s.userId, role: s.role, weight: s.weight }))
-      });
-      setPublishStep('waiting');
-      return;
-    }
-
-    if (publishStep === 'waiting') {
-      if (!allSigned) return alert('Waiting for all contributors to sign');
-      setPublishStep('mint');
-      return;
-    }
-
-    if (publishStep === 'mint') {
-      // The useEffect handles the actual API call
-      return;
-    }
-
-    nextPublishStep(publishStep);
   };
 
   const handleCancelPublishing = async () => {
@@ -329,6 +340,11 @@ export default function PublishingModal({
                     <span className={`font-bold ${c.status === 'Signed' ? 'text-green-600' : 'text-theme-accent'}`}>
                       {c.status}
                     </span>
+                    {
+                      c.userId === authState?.user?.id && c.status === 'Pending' && (
+                        <SignContributionButton documentId={document.id} weight={c.weight} />
+                      )
+                    }
                   </div>
                 ))}
               </div>
