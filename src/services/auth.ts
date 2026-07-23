@@ -112,7 +112,7 @@ export const useClaimBadge = () => {
       return fetchAPI('/api/badges', {
         method: 'POST',
         data: { badgeId }
-      }) as Promise<{ txHash: string }>;
+      }) as Promise<{ status?: string; message?: string; txHash?: string }>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userBadges'] });

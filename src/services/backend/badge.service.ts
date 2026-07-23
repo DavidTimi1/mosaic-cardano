@@ -3,7 +3,7 @@ import { runRead, runWrite } from "./shared";
 export interface MosaicBadge {
     id: string;
     type: string;
-    status: 'UNCLAIMED' | 'CLAIMED';
+    status: 'UNCLAIMED' | 'MINTING' | 'CLAIMED' | 'FAILED';
     policyId?: string;
     assetNameHex?: string;
     assetNameBase?: string;
@@ -48,6 +48,29 @@ export const badgeService = {
                     b.createdAt = $now
             `,
             { userId, badgeType, badgeId, now: new Date().toISOString() },
+            () => null
+        );
+    },
+
+    async markBadgeMinting(userId: string, badgeId: string): Promise<void> {
+        await runWrite(
+            `
+                MATCH (u:Mosaic_User {id: $userId})-[:HAS_BADGE]->(b:Mosaic_Badge {id: $badgeId})
+                SET b.status = 'MINTING',
+                    b.mintingStartedAt = $now
+            `,
+            { userId, badgeId, now: new Date().toISOString() },
+            () => null
+        );
+    },
+
+    async markBadgeFailed(userId: string, badgeId: string): Promise<void> {
+        await runWrite(
+            `
+                MATCH (u:Mosaic_User {id: $userId})-[:HAS_BADGE]->(b:Mosaic_Badge {id: $badgeId})
+                SET b.status = 'UNCLAIMED'
+            `,
+            { userId, badgeId },
             () => null
         );
     },
