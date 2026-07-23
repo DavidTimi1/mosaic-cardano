@@ -1,8 +1,9 @@
 import { Worker, Job } from 'bullmq';
 import { Resend } from 'resend';
+import webpush from 'web-push';
 import { getQueueRedisConnection } from '../lib/queue';
 import { notificationService } from '../services/backend/notification.service';
-import { runWrite } from '../services/backend/shared';
+import { runRead, runWrite } from '../services/backend/shared';
 
 console.log('🚀 Starting Mosaic Background Worker Daemon...');
 
@@ -63,6 +64,38 @@ const notificationWorker = new Worker(
         return { notificationId: notification.id };
       }
 
+      case 'broadcast-push-notifications': {
+        const { audience, title, body, actionUrl } = job.data;
+        console.log(`[Worker:Broadcast] 📢 Dispatching push notifications for broadcast to audience "${audience}"...`);
+
+        let userQuery = `MATCH (u:Mosaic_User) WHERE u.pushSubscription IS NOT NULL RETURN u.pushSubscription AS sub`;
+        const params: Record<string, unknown> = {};
+
+        if (audience !== 'ALL') {
+          userQuery = `MATCH (u:Mosaic_User {planType: $planType}) WHERE u.pushSubscription IS NOT NULL RETURN u.pushSubscription AS sub`;
+          params.planType = audience;
+        }
+
+        const subscriptions = await runRead(userQuery, params, (row: Record<string, unknown>) => row.sub as string);
+        let pushedCount = 0;
+
+        for (const subJson of subscriptions) {
+          try {
+            const subscription = JSON.parse(subJson);
+            await webpush.sendNotification(
+              subscription,
+              JSON.stringify({ title, body, url: actionUrl })
+            );
+            pushedCount++;
+          } catch (pushErr) {
+            console.error('[Worker:Broadcast] Push dispatch error:', pushErr);
+          }
+        }
+
+        console.log(`[Worker:Broadcast] ✅ Web Push broadcast complete. Sent ${pushedCount} push notifications.`);
+        return { pushedCount };
+      }
+
       default:
         console.warn(`[Worker] Unknown job name: ${job.name}`);
         return { status: 'unhandled' };
@@ -107,6 +140,92 @@ const systemWorker = new Worker(
   }
 );
 
+import { mintCIP68Badge } from '../lib/blockchain/minting';
+import { badgeService } from '../services/backend/badge.service';
+import { verifyPaymentAndUpdatePlan } from '../services/backend/payment.service';
+import redis from '../lib/backend/redis';
+
+// 3. Badge Minting Queue Worker
+const badgeWorker = new Worker(
+  'badge-minting',
+  async (job: Job) => {
+    const { userId, badgeId, badgeType, walletAddress, metadata } = job.data;
+    console.log(`[Worker:Badge] 🏅 Minting CIP-68 badge "${badgeType}" (${badgeId}) for user ${userId}...`);
+
+    try {
+      const { txHash, policyId, assetNameHex, assetNameBase } = await mintCIP68Badge(
+        walletAddress,
+        badgeType,
+        badgeId,
+        metadata
+      );
+
+      const isMainnet = process.env.NEXT_PUBLIC_IS_LIVE === 'true' ? 1 : 0;
+      await badgeService.markBadgeClaimed(userId, badgeId, policyId, assetNameHex, assetNameBase, txHash, isMainnet);
+
+      // Publish real-time SSE event
+      const ssePayload = JSON.stringify({
+        event: 'badge_claimed',
+        userId,
+        badgeId,
+        badgeType,
+        txHash,
+        policyId,
+        assetNameBase,
+        status: 'CLAIMED',
+      });
+      await redis.publish(`user:events:${userId}`, ssePayload).catch(() => {});
+
+      // Create in-app notification
+      await notificationService.createNotification({
+        userId,
+        type: 'SYSTEM',
+        title: 'Badge Minted! 🏅',
+        body: `Your Mosaic ${badgeType} badge has been successfully minted on-chain.`,
+        actionUrl: `/u/${userId}`,
+      }).catch(() => {});
+
+      console.log(`[Worker:Badge] ✅ Badge ${badgeId} minted successfully! TxHash: ${txHash}`);
+      return { txHash, policyId };
+    } catch (err: unknown) {
+      console.error(`[Worker:Badge] ❌ Minting failed for badge ${badgeId}:`, err);
+      // Reset status to UNCLAIMED on final attempt failure
+      if (job.attemptsMade >= (job.opts.attempts || 3) - 1) {
+        await badgeService.markBadgeFailed(userId, badgeId).catch(() => {});
+        const failPayload = JSON.stringify({
+          event: 'badge_mint_failed',
+          userId,
+          badgeId,
+          status: 'UNCLAIMED',
+        });
+        await redis.publish(`user:events:${userId}`, failPayload).catch(() => {});
+      }
+      throw err;
+    }
+  },
+  {
+    connection: getQueueRedisConnection(),
+    concurrency: 2,
+  }
+);
+
+// 4. Payment Verification Queue Worker
+const paymentWorker = new Worker(
+  'payment-verification',
+  async (job: Job) => {
+    const { userId, txHash, planType } = job.data;
+    console.log(`[Worker:Payment] 💳 Verifying payment transaction ${txHash} for user ${userId} (Attempt ${job.attemptsMade + 1}/${job.opts.attempts})...`);
+
+    const success = await verifyPaymentAndUpdatePlan(userId, txHash, planType);
+    console.log(`[Worker:Payment] ✅ Payment ${txHash} verified successfully! Plan updated to ${planType}.`);
+    return { verified: success, userId, planType };
+  },
+  {
+    connection: getQueueRedisConnection(),
+    concurrency: 3,
+  }
+);
+
 // Event Listeners for Lifecycle Tracking
 notificationWorker.on('completed', (job: Job, returnvalue: unknown) => {
   console.log(`[Worker Event] 🎉 Job #${job.id} (${job.name}) completed successfully! Result:`, returnvalue);
@@ -114,6 +233,22 @@ notificationWorker.on('completed', (job: Job, returnvalue: unknown) => {
 
 notificationWorker.on('failed', (job: Job | undefined, err: Error) => {
   console.error(`[Worker Event] ❌ Job #${job?.id} (${job?.name}) failed with error:`, err.message);
+});
+
+badgeWorker.on('completed', (job: Job) => {
+  console.log(`[Worker Event] 🎉 Badge job #${job.id} completed!`);
+});
+
+badgeWorker.on('failed', (job: Job | undefined, err: Error) => {
+  console.error(`[Worker Event] ❌ Badge job #${job?.id} failed:`, err.message);
+});
+
+paymentWorker.on('completed', (job: Job) => {
+  console.log(`[Worker Event] 🎉 Payment job #${job.id} completed!`);
+});
+
+paymentWorker.on('failed', (job: Job | undefined, err: Error) => {
+  console.error(`[Worker Event] ❌ Payment job #${job?.id} failed:`, err.message);
 });
 
 systemWorker.on('completed', (job: Job) => {
@@ -125,7 +260,12 @@ console.log('✅ Workers are active and waiting for jobs in Redis...');
 // Handle graceful shutdown
 const gracefulShutdown = async () => {
   console.log('\n🛑 Shutting down workers gracefully...');
-  await Promise.all([notificationWorker.close(), systemWorker.close()]);
+  await Promise.all([
+    notificationWorker.close(),
+    systemWorker.close(),
+    badgeWorker.close(),
+    paymentWorker.close(),
+  ]);
   console.log('👋 Workers stopped.');
   process.exit(0);
 };
