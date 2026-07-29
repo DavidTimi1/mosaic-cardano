@@ -41,6 +41,22 @@ function addSecurityHeaders(response: NextResponse) {
 }
 
 export function middleware(req: NextRequest) {
+  // Canonical site URL redirect in production
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (process.env.NODE_ENV === 'production' && siteUrl) {
+    try {
+      const target = new URL(siteUrl);
+      const currentHost = req.headers.get('x-forwarded-host') || req.headers.get('host') || req.nextUrl.host;
+
+      if (currentHost && currentHost !== target.host) {
+        const redirectUrl = new URL(req.nextUrl.pathname + req.nextUrl.search, target.origin);
+        return addSecurityHeaders(NextResponse.redirect(redirectUrl, 301));
+      }
+    } catch {
+      // Ignore invalid NEXT_PUBLIC_SITE_URL
+    }
+  }
+
   const isLoggingOut = req.cookies.has('mosaic_logging_out');
   const token = isLoggingOut ? undefined : req.cookies.get(SESSION_COOKIE_NAME)?.value;
   const pathname = req.nextUrl.pathname;
