@@ -102,6 +102,8 @@ export const POST = withAuth(async (req, context, userId) => {
             metadata.documentPublished = 'true';
         } else if (badge.type === 'early-user') {
             metadata.onboarded = 'true';
+        } else if (badge.type === 'test-badge') {
+            metadata.isTestBadge = 'true';
         }
 
         // 1. Mark status as MINTING in Neo4j database

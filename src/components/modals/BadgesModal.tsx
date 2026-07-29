@@ -9,10 +9,11 @@ import { toast } from 'sonner';
 import { getBadgeConfig } from '@/lib/badges';
 import { getExplorerUrl } from '@/services/api';
 import { useUserEventsStream } from '@/hooks/useUserEventsStream';
+import { MODALS } from '@/lib/modals';
 
 export function BadgesModal() {
     const { isOpen: checkIsOpen, closeModal } = useModals();
-    const isOpen = checkIsOpen('BADGES');
+    const isOpen = checkIsOpen(MODALS.BADGES);
     
     useUserEventsStream(isOpen);
 
@@ -26,8 +27,8 @@ export function BadgesModal() {
         try {
             setClaimingBadgeId(badgeId);
             await claimMutation.mutateAsync(badgeId);
-            toast.success("Badge minting queued in background!", {
-                description: "Our worker is minting your CIP-68 badge on Cardano. You'll be notified when confirmed.",
+            toast.success("Badge minting began!", {
+                description: "You'll be notified when ready.",
             });
         } catch (e: unknown) {
             toast.error(e instanceof Error ? e.message : "Failed to mint badge");
@@ -37,7 +38,7 @@ export function BadgesModal() {
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal('BADGES')}>
+        <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal(MODALS.BADGES)}>
             <DialogContent className="sm:max-w-[600px] bg-theme-surface border-theme-outline/20">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-xl text-theme-forest font-bold">

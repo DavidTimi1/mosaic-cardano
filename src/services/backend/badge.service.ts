@@ -15,7 +15,7 @@ export interface MosaicBadge {
 
 export const badgeService = {
     async getUserBadges(userId: string): Promise<MosaicBadge[]> {
-        return runRead(
+        const badges = await runRead(
             `
                 MATCH (u:Mosaic_User {id: $userId})-[:HAS_BADGE]->(b:Mosaic_Badge)
                 RETURN b {
@@ -35,6 +35,24 @@ export const badgeService = {
             { userId },
             row => row.badge as MosaicBadge
         );
+
+        const isLive = process.env.NEXT_PUBLIC_IS_LIVE === 'true';
+        const isDev = process.env.NODE_ENV === 'development';
+        if (!isLive && isDev) {
+            const hasTestBadge = badges.some(b => b.type === 'test-badge' && b.status !== 'CLAIMED');
+            if (!hasTestBadge) {
+                const testBadgeId = `test-badge-${userId}-${new Date().getTime()}`;
+                await this.createUnclaimedBadge(userId, 'test-badge', testBadgeId);
+                badges.unshift({
+                    id: testBadgeId,
+                    type: 'test-badge',
+                    status: 'UNCLAIMED',
+                    createdAt: new Date().toISOString()
+                });
+            }
+        }
+
+        return badges;
     },
 
     async createUnclaimedBadge(userId: string, badgeType: string, badgeId: string): Promise<void> {
