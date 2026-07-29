@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { Worker, Job } from 'bullmq';
 import { Resend } from 'resend';
 import webpush from 'web-push';
@@ -104,6 +107,10 @@ const notificationWorker = new Worker(
   {
     connection: getQueueRedisConnection(),
     concurrency: 5,
+    limiter: {
+      max: 20,
+      duration: 1000,
+    },
   }
 );
 
@@ -153,14 +160,36 @@ const badgeWorker = new Worker(
     console.log(`[Worker:Badge] 🏅 Minting CIP-68 badge "${badgeType}" (${badgeId}) for user ${userId}...`);
 
     try {
-      const { txHash, policyId, assetNameHex, assetNameBase } = await mintCIP68Badge(
-        walletAddress,
-        badgeType,
-        badgeId,
-        metadata
-      );
+      let txHash: string;
+      let policyId: string;
+      let assetNameHex: string;
+      let assetNameBase: string;
 
-      const isMainnet = process.env.NEXT_PUBLIC_IS_LIVE === 'true' ? 1 : 0;
+      const isLive = process.env.NEXT_PUBLIC_IS_LIVE === 'true';
+      const isDev = process.env.NODE_ENV === 'development';
+      const isTextMode = !isLive && isDev;
+      const hasWalletCredentials = Boolean(process.env.APP_WALLET_MNEMONIC && process.env.BLOCKFROST_PROJECT_ID);
+
+      if (isTextMode && (badgeType === 'test-badge' || !hasWalletCredentials)) {
+        console.log(`[Worker:Badge] 🧪 Dev environment minting for badge "${badgeType}" (${badgeId})...`);
+        txHash = `mock_tx_dev_test_${Date.now()}`;
+        policyId = 'mock_policy_dev_test_12345';
+        assetNameBase = badgeId.substring(0, 28);
+        assetNameHex = Buffer.from(assetNameBase).toString('hex');
+      } else {
+        const result = await mintCIP68Badge(
+          walletAddress,
+          badgeType,
+          badgeId,
+          metadata
+        );
+        txHash = result.txHash;
+        policyId = result.policyId;
+        assetNameHex = result.assetNameHex;
+        assetNameBase = result.assetNameBase;
+      }
+
+      const isMainnet = isLive ? 1 : 0;
       await badgeService.markBadgeClaimed(userId, badgeId, policyId, assetNameHex, assetNameBase, txHash, isMainnet);
 
       // Publish real-time SSE event
@@ -206,6 +235,10 @@ const badgeWorker = new Worker(
   {
     connection: getQueueRedisConnection(),
     concurrency: 2,
+    limiter: {
+      max: 5,
+      duration: 1000,
+    },
   }
 );
 
@@ -223,6 +256,10 @@ const paymentWorker = new Worker(
   {
     connection: getQueueRedisConnection(),
     concurrency: 3,
+    limiter: {
+      max: 5,
+      duration: 1000,
+    },
   }
 );
 
@@ -272,3 +309,11 @@ const gracefulShutdown = async () => {
 
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
+
+process.on('uncaughtException', (err: Error) => {
+  console.error('[Worker Fatal] 💥 Uncaught Exception trapped:', err);
+});
+
+process.on('unhandledRejection', (reason: unknown) => {
+  console.error('[Worker Fatal] ⚠️ Unhandled Rejection trapped:', reason);
+});

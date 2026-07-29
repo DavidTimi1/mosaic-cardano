@@ -1,23 +1,9 @@
 import { Queue } from 'bullmq';
 import { Redis } from 'ioredis';
-
-const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+import {noRetryRedis} from './backend/redis';
 
 export function getQueueRedisConnection(): Redis {
-  if (process.env.REDIS_URL) {
-    return new Redis(process.env.REDIS_URL, {
-      maxRetriesPerRequest: null,
-      enableOfflineQueue: !isBuildPhase,
-    });
-  }
-  
-  return new Redis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
-    password: process.env.REDIS_PASSWORD,
-    maxRetriesPerRequest: null,
-    enableOfflineQueue: !isBuildPhase,
-  });
+  return noRetryRedis
 }
 
 // Global queue singletons to avoid creating multiple instances in Next.js dev hot-reloads
