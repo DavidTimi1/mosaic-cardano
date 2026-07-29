@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import { API } from '@/lib/api-routes';
 
 function triggerConfetti() {
   const duration = 3000;
@@ -38,42 +39,56 @@ export function useUserEventsStream(enabled = true) {
   useEffect(() => {
     if (!enabled) return;
 
-    const eventSource = new EventSource('/api/events/stream', { withCredentials: true });
+    let eventSource: EventSource | null = null;
+    let reconnectTimer: NodeJS.Timeout | null = null;
+    let retryDelay = 3000;
 
-    eventSource.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data);
+    const connect = () => {
+      eventSource = new EventSource(API.SERVER_EVENTS, { withCredentials: true });
 
-        if (payload.event === 'badge_claimed') {
-          queryClient.invalidateQueries({ queryKey: ['userBadges'] });
-          toast.success(`Badge "${payload.badgeType || 'Badge'}" minted on-chain!`, {
-            description: 'Your CIP-68 token is now confirmed on Cardano.',
-          });
-          triggerConfetti();
-        } else if (payload.event === 'badge_mint_failed') {
-          queryClient.invalidateQueries({ queryKey: ['userBadges'] });
-          toast.error('Badge minting failed', {
-            description: 'You can retry claiming your badge.',
-          });
-        } else if (payload.event === 'plan_upgraded') {
-          queryClient.invalidateQueries({ queryKey: ['authState'] });
-          queryClient.invalidateQueries({ queryKey: ['userSettings'] });
-          toast.success(`Plan Upgraded to ${payload.planType}! 🎉`, {
-            description: 'Your subscription is now active.',
-          });
-          triggerConfetti();
+      eventSource.onmessage = (event) => {
+        retryDelay = 3000;
+        try {
+          const payload = JSON.parse(event.data);
+
+          if (payload.event === 'badge_claimed') {
+            queryClient.invalidateQueries({ queryKey: ['userBadges'] });
+            toast.success(`Badge "${payload.badgeType || 'Badge'}" minted on-chain!`, {
+              description: 'Your CIP-68 token is now confirmed on Cardano.',
+            });
+            triggerConfetti();
+          } else if (payload.event === 'badge_mint_failed') {
+            queryClient.invalidateQueries({ queryKey: ['userBadges'] });
+            toast.error('Badge minting failed', {
+              description: 'You can retry claiming your badge.',
+            });
+          } else if (payload.event === 'plan_upgraded') {
+            queryClient.invalidateQueries({ queryKey: ['authState'] });
+            queryClient.invalidateQueries({ queryKey: ['userSettings'] });
+            toast.success(`Plan Upgraded to ${payload.planType}! 🎉`, {
+              description: 'Your subscription is now active.',
+            });
+            triggerConfetti();
+          }
+        } catch (err) {
+          console.error('Failed to parse user SSE event:', err);
         }
-      } catch (err) {
-        console.error('Failed to parse user SSE event:', err);
-      }
+      };
+
+      eventSource.onerror = () => {
+        eventSource?.close();
+        reconnectTimer = setTimeout(() => {
+          connect();
+          retryDelay = Math.min(retryDelay * 1.5, 30000);
+        }, retryDelay);
+      };
     };
 
-    eventSource.onerror = () => {
-      eventSource.close();
-    };
+    connect();
 
     return () => {
-      eventSource.close();
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      eventSource?.close();
     };
   }, [enabled, queryClient]);
 }

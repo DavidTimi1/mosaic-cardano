@@ -46,8 +46,18 @@ export const GET = withAuth(async (request: Request, context: { params: Record<s
       await subClient.subscribe(channel);
       subClient.on('message', messageHandler);
 
+      // Periodic heartbeat ping to keep connection alive through reverse proxies
+      const heartbeatInterval = setInterval(() => {
+        try {
+          controller.enqueue(encoder.encode(': ping\n\n'));
+        } catch {
+          clearInterval(heartbeatInterval);
+        }
+      }, 25000);
+
       // Handle client disconnect
       request.signal.addEventListener('abort', () => {
+        clearInterval(heartbeatInterval);
         subClient.unsubscribe(channel).catch(() => {});
         subClient.quit().catch(() => {});
         try {
