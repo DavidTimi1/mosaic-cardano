@@ -3,7 +3,7 @@ import webpush from 'web-push';
 
 if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 	webpush.setVapidDetails(
-		'mailto:support@mosaic.app',
+		`mailto:${process.env.NEXT_PUBLIC_SUPPORT_MAIL}`,
 		process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
 		process.env.VAPID_PRIVATE_KEY
 	);
@@ -19,6 +19,7 @@ import {
 import { NotificationNodeSchema, type NotificationNode } from '@/types/schemas';
 import { cacheAside, cacheKey, invalidateCachePattern } from './cache';
 import { runRead, runWrite } from './shared';
+import { notificationQueue } from '@/lib/queue';
 
 const markReadInput = z.object({
 	userId: z.string().uuid(),
@@ -26,6 +27,12 @@ const markReadInput = z.object({
 });
 
 export const notificationService = {
+	async queueNotification(input: CreateNotificationRequest): Promise<void> {
+		await notificationQueue.add('create-inapp-notification', input).catch((err) => {
+			console.error('Failed to enqueue notification job:', err);
+		});
+	},
+
 	async createNotification(input: CreateNotificationRequest): Promise<NotificationNode> {
 		const parsed = CreateNotificationRequestSchema.parse(input);
 		const now = Date.now();
@@ -147,10 +154,32 @@ export const notificationService = {
 			async () => {
 				const rows = await runRead(
 					`
-						MATCH (:Mosaic_User {id: $userId})-[:HAS_NOTIFICATION]->(n:Mosaic_Notification)
+						MATCH (u:Mosaic_User {id: $userId})
+						OPTIONAL MATCH (u)-[:HAS_NOTIFICATION]->(n:Mosaic_Notification)
 						WHERE $cursor IS NULL OR n.createdAt < toInteger($cursor)
-						RETURN n AS notification
-						ORDER BY n.createdAt DESC
+						WITH u, collect(n) AS userNavs
+
+						OPTIONAL MATCH (sa:Mosaic_SystemAnnouncement)
+						WHERE (sa.audience = 'ALL' OR sa.audience = coalesce(u.planType, 'FREE'))
+						  AND ($cursor IS NULL OR sa.createdAt < toInteger($cursor))
+						WITH userNavs, collect(sa {
+						  .id,
+						  userId: $userId,
+						  type: 'SYSTEM',
+						  title: sa.title,
+						  body: sa.body,
+						  isRead: false,
+						  aggregationKey: null,
+						  actionUrl: sa.actionUrl,
+						  actors: [],
+						  createdAt: sa.createdAt,
+						  updatedAt: sa.createdAt
+						}) AS sysNavs
+
+						UNWIND (userNavs + sysNavs) AS notification
+						WITH notification WHERE notification IS NOT NULL AND notification.id IS NOT NULL
+						RETURN notification
+						ORDER BY notification.createdAt DESC
 						LIMIT toInteger($limit)
 					`,
 					{
@@ -217,11 +246,7 @@ export const notificationService = {
 		const title = `New Upvote`;
 		const body = `${actorName} upvoted your post "${postTitle}"`;
 		
-		// In a real scenario with actors array, we'd pass actorName to createNotification 
-		// and the Cypher query would append it to `actors` if it exists. 
-		// For now we just overwrite the body to show the latest state.
-		
-		return this.createNotification({
+		return this.queueNotification({
 			userId,
 			type: 'UPVOTE',
 			title,
@@ -232,7 +257,7 @@ export const notificationService = {
 	},
 
 	async notifySignatureRequest(userId: string, actorName: string, pieceTitle: string, pieceId: string) {
-		return this.createNotification({
+		return this.queueNotification({
 			userId,
 			type: 'SIGNATURE_REQUEST',
 			title: 'Signature Request',
@@ -242,7 +267,7 @@ export const notificationService = {
 	},
 
 	async notifyCommunityMemberJoined(adminId: string, memberName: string, communityName: string, communityId: string) {
-		return this.createNotification({
+		return this.queueNotification({
 			userId: adminId,
 			type: 'COMMUNITY_MEMBER_JOINED',
 			title: 'New Community Member',
@@ -252,7 +277,7 @@ export const notificationService = {
 	},
 
 	async notifyBadgeEarned(userId: string, badgeName: string) {
-		return this.createNotification({
+		return this.queueNotification({
 			userId,
 			type: 'SYSTEM',
 			title: 'New Badge Unlocked!',
@@ -262,7 +287,7 @@ export const notificationService = {
 	},
 
 	async notifyMention(userId: string, actorName: string, communityName: string, communityId: string) {
-		return this.createNotification({
+		return this.queueNotification({
 			userId,
 			type: 'MENTION',
 			title: 'You were mentioned',

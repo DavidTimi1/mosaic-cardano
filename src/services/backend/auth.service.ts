@@ -138,7 +138,7 @@ export const authService = {
 
 		try {
 			const { notificationService } = await import('./notification.service');
-			await notificationService.createNotification({
+			await notificationService.queueNotification({
 				userId: user.id,
 				type: 'SYSTEM',
 				title: 'Welcome to Mosaic! 🎉',
