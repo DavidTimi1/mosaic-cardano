@@ -10,6 +10,7 @@
     "db:init": "node ./scripts/db-init.cjs",
     "type-check": "tsc --noEmit",
     "worker": "tsx src/workers/index.ts",
+    "load-test": "k6 run scripts/k6-load-test.js",
     "prepare": "husky",
     "check": "pnpm run lint && pnpm run type-check"
   },
